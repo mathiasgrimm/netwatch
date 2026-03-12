@@ -10,6 +10,7 @@ use Mathiasgrimm\Netwatch\Console\InitCommand;
 use Mathiasgrimm\Netwatch\Laravel\Console\NetwatchCommand;
 use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
 use Mathiasgrimm\Netwatch\Netwatch;
+use Throwable;
 
 class NetwatchServiceProvider extends ServiceProvider
 {
@@ -25,31 +26,7 @@ class NetwatchServiceProvider extends ServiceProvider
                 fn (array $probe) => $probe['enabled'] ?? true,
             );
 
-            // Resolve probe definitions
-            foreach ($probes as $name => $probe) {
-                if (is_array($probe['probe'])) {
-                    $class = array_key_first($probe['probe']);
-                    $args = $probe['probe'][$class];
-
-                    try {
-                        $probes[$name]['probe'] = new $class(...$args);
-                    } catch (\Throwable $e) {
-                        throw new \RuntimeException(
-                            "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
-                            previous: $e,
-                        );
-                    }
-                } elseif (is_string($probe['probe'])) {
-                    try {
-                        $probes[$name]['probe'] = $this->app->make($probe['probe']);
-                    } catch (\Throwable $e) {
-                        throw new \RuntimeException(
-                            "Netwatch: failed to resolve probe '{$name}' ({$probe['probe']}) from container: {$e->getMessage()}",
-                            previous: $e,
-                        );
-                    }
-                }
-            }
+            $probes = $this->resolveProbes($probes);
 
             return new Netwatch(
                 probes: $probes,
@@ -71,6 +48,26 @@ class NetwatchServiceProvider extends ServiceProvider
                 InitCommand::class,
             ]);
         }
+    }
+
+    private function resolveProbes(array $probes): array
+    {
+        $probes = Netwatch::resolveArrayProbes($probes);
+
+        foreach ($probes as $name => $probe) {
+            if (is_string($probe['probe'])) {
+                try {
+                    $probes[$name]['probe'] = $this->app->make($probe['probe']);
+                } catch (Throwable $e) {
+                    throw new \RuntimeException(
+                        "Netwatch: failed to resolve probe '{$name}' ({$probe['probe']}) from container: {$e->getMessage()}",
+                        previous: $e,
+                    );
+                }
+            }
+        }
+
+        return $probes;
     }
 
     private function registerRoutes(): void

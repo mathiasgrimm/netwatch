@@ -50,22 +50,7 @@ class Netwatch
             fn (array $probe) => $probe['enabled'] ?? true,
         );
 
-        // Resolve probe definitions
-        foreach ($probes as $name => $probe) {
-            if (is_array($probe['probe'])) {
-                $class = array_key_first($probe['probe']);
-                $args = $probe['probe'][$class];
-
-                try {
-                    $probes[$name]['probe'] = new $class(...$args);
-                } catch (\Throwable $e) {
-                    throw new \RuntimeException(
-                        "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
-                        previous: $e,
-                    );
-                }
-            }
-        }
+        $probes = self::resolveArrayProbes($probes);
 
         return new self(
             probes: $probes,
@@ -108,6 +93,33 @@ class Netwatch
         }
 
         return $results;
+    }
+
+    /**
+     * Resolve array-based probe definitions: [Class::class => [args]] → new Class(...args)
+     *
+     * @param  array<string, array{probe: mixed}>  $probes
+     * @return array<string, array{probe: mixed}>
+     */
+    public static function resolveArrayProbes(array $probes): array
+    {
+        foreach ($probes as $name => $probe) {
+            if (is_array($probe['probe'])) {
+                $class = array_key_first($probe['probe']);
+                $args = $probe['probe'][$class];
+
+                try {
+                    $probes[$name]['probe'] = new $class(...$args);
+                } catch (\Throwable $e) {
+                    throw new \RuntimeException(
+                        "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
+                        previous: $e,
+                    );
+                }
+            }
+        }
+
+        return $probes;
     }
 
     /**
