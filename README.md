@@ -3,7 +3,9 @@
 Network service latency probing tool for PHP. Measures connectivity and response times to Redis, PostgreSQL, MySQL, S3, HTTP endpoints, and raw TCP services with statistical analysis.
 
 ## TODO
+- [ ] Improve README.md (add screenshots, etc)
 - [ ] Include hostname/identification on the output
+- [ ] Remove references/implementation related to `netwatch:init --laravel`
 
 ## Maybe
 - [ ] `/netwatch/health?token=env(token)` (maybe POST) (or maybe a form)
@@ -48,6 +50,96 @@ php artisan vendor:publish --tag=netwatch-config
 ```
 
 This creates `config/netwatch.php` with pre-configured probes that read from your existing Laravel environment variables (`DB_*`, `REDIS_*`, `AWS_*`, `APP_URL`). The config uses the serializable `[Class::class => [args]]` array format, so it is fully compatible with `php artisan config:cache`.
+
+```php
+<?php
+
+use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
+use Mathiasgrimm\Netwatch\Probe\HttpProbe;
+use Mathiasgrimm\Netwatch\Probe\PdoProbe;
+use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
+use Mathiasgrimm\Netwatch\Probe\S3Probe;
+use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
+
+return [
+    'iterations' => (int) env('NETWATCH_ITERATIONS', 10),
+
+    'health_route' => [
+        'enabled' => (bool) env('NETWATCH_HEALTH_ENABLED', false),
+        'domain' => env('NETWATCH_DOMAIN'),
+        'path' => env('NETWATCH_PATH', 'netwatch'),
+        'middleware' => ['web', Authorize::class],
+    ],
+
+    'probes' => [
+
+        'database' => [
+            'enabled' => env('NETWATCH_PROBE_DATABASE_ENABLED', false),
+            'probe' => [
+                PdoProbe::class => [
+                    env('DB_CONNECTION').':host='.env('DB_HOST').';port='.env('DB_PORT').';dbname='.env('DB_DATABASE'),
+                    env('DB_USERNAME'),
+                    env('DB_PASSWORD'),
+                ],
+            ],
+        ],
+
+        'redis' => [
+            'enabled' => env('NETWATCH_PROBE_REDIS_ENABLED', false),
+            'probe' => [
+                PhpRedisProbe::class => [
+                    env('REDIS_HOST').':'.env('REDIS_PORT'),
+                    env('REDIS_USERNAME'),
+                    env('REDIS_PASSWORD'),
+                ],
+            ],
+        ],
+
+        's3' => [
+            'enabled' => env('NETWATCH_PROBE_S3_ENABLED', false),
+            'probe' => [
+                S3Probe::class => [
+                    env('AWS_BUCKET'),
+                    env('AWS_DEFAULT_REGION'),
+                    env('AWS_ACCESS_KEY_ID'),
+                    env('AWS_SECRET_ACCESS_KEY'),
+                    env('AWS_ENDPOINT'),
+                ],
+            ],
+        ],
+
+        'app' => [
+            'enabled' => env('NETWATCH_PROBE_APP_ENABLED', false),
+            'probe' => [
+                HttpProbe::class => [
+                    env('APP_URL'),
+                ],
+            ],
+        ],
+
+        'cloudflare-dns' => [
+            'enabled' => env('NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED', false),
+            'probe' => [
+                TcpPingProbe::class => [
+                    '1.1.1.1',
+                    53,
+                ],
+            ],
+        ],
+
+        'google-dns' => [
+            'enabled' => env('NETWATCH_PROBE_GOOGLE_DNS_ENABLED', false),
+            'probe' => [
+                TcpPingProbe::class => [
+                    '8.8.8.8',
+                    53,
+                ],
+            ],
+        ],
+
+    ],
+];
+```
 
 ### Artisan Command
 
@@ -115,8 +207,6 @@ NETWATCH_PROBE_S3_ENABLED=false               # Enable S3 probe
 NETWATCH_PROBE_APP_ENABLED=false              # Enable HTTP probe for APP_URL
 NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED=false   # Enable Cloudflare DNS (1.1.1.1) TCP probe
 NETWATCH_PROBE_GOOGLE_DNS_ENABLED=false       # Enable Google DNS (8.8.8.8) TCP probe
-NETWATCH_PROBE_GITHUB_COM_ENABLED=false       # Enable github.com HTTP probe
-NETWATCH_PROBE_GITHUB_ORG_ENABLED=false       # Enable github.org HTTP probe
 ```
 
 ## Standalone (without Laravel)

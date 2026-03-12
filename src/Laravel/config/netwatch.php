@@ -112,23 +112,5 @@ return [
             ],
         ],
 
-        'github.com' => [
-            'enabled' => env('NETWATCH_PROBE_GITHUB_COM_ENABLED', false),
-            'probe' => [
-                HttpProbe::class => [
-                    'https://github.com',
-                ],
-            ],
-        ],
-
-        'github.org' => [
-            'enabled' => env('NETWATCH_PROBE_GITHUB_ORG_ENABLED', false),
-            'probe' => [
-                HttpProbe::class => [
-                    'https://github.org',
-                ],
-            ],
-        ],
-
     ],
 ];
