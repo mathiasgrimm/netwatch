@@ -72,6 +72,25 @@ test('singleton resolves with probes from config', function () {
         ->and($results['test']->failures)->toBe(0);
 });
 
+test('singleton resolves array-based probe config', function () {
+    config([
+        'netwatch.probes' => [
+            'test' => [
+                'probe' => [
+                    SuccessProbe::class => [],
+                ],
+            ],
+        ],
+    ]);
+    $this->app->forgetInstance(Netwatch::class);
+
+    $netwatch = $this->app->make(Netwatch::class);
+    expect($netwatch->probeNames())->toBe(['test']);
+
+    $results = $netwatch->run();
+    expect($results['test']->failures)->toBe(0);
+});
+
 test('artisan netwatch:run command is registered', function () {
     $commands = array_keys(Artisan::all());
     expect($commands)->toContain('netwatch:run');

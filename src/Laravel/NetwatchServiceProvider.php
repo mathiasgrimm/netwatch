@@ -25,10 +25,29 @@ class NetwatchServiceProvider extends ServiceProvider
                 fn (array $probe) => $probe['enabled'] ?? true,
             );
 
-            // Resolve closure-based probe definitions
+            // Resolve probe definitions
             foreach ($probes as $name => $probe) {
-                if ($probe['probe'] instanceof \Closure) {
-                    $probes[$name]['probe'] = $probe['probe']();
+                if (is_array($probe['probe'])) {
+                    $class = array_key_first($probe['probe']);
+                    $args = $probe['probe'][$class];
+
+                    try {
+                        $probes[$name]['probe'] = new $class(...$args);
+                    } catch (\Throwable $e) {
+                        throw new \RuntimeException(
+                            "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
+                            previous: $e,
+                        );
+                    }
+                } elseif (is_string($probe['probe'])) {
+                    try {
+                        $probes[$name]['probe'] = $this->app->make($probe['probe']);
+                    } catch (\Throwable $e) {
+                        throw new \RuntimeException(
+                            "Netwatch: failed to resolve probe '{$name}' ({$probe['probe']}) from container: {$e->getMessage()}",
+                            previous: $e,
+                        );
+                    }
                 }
             }
 
