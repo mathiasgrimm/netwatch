@@ -30,6 +30,7 @@ class Netwatch
         private readonly array $probes,
         private readonly int $defaultIterations = 10,
     ) {
+        self::ensureProbeContract($probes);
         $this->runner = new Runner;
     }
 
@@ -93,6 +94,21 @@ class Netwatch
         }
 
         return $results;
+    }
+
+    /**
+     * @param  array<string, array{probe: mixed}>  $probes
+     */
+    private static function ensureProbeContract(array $probes): void
+    {
+        foreach ($probes as $name => $probe) {
+            if (! $probe['probe'] instanceof ProbeInterface) {
+                $type = get_debug_type($probe['probe']);
+                throw new \InvalidArgumentException(
+                    "Netwatch: probe '{$name}' must implement ProbeInterface, got {$type}",
+                );
+            }
+        }
     }
 
     /**
