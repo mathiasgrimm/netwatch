@@ -38,7 +38,7 @@ test('probe fails on bad dsn', function () {
 
 test('probe succeeds on local mysql', function () {
     $socket = @fsockopen('127.0.0.1', 3306, $errno, $errstr, 0.5);
-    if (!$socket) {
+    if (! $socket) {
         $this->markTestSkipped('MySQL not available on localhost:3306');
     }
     fclose($socket);

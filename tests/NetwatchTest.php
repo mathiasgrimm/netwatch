@@ -7,7 +7,7 @@ use Mathiasgrimm\Netwatch\Result\AggregateResult;
 
 function writeTestConfig(string $dir, array $config): string
 {
-    $path = $dir . '/netwatch.php';
+    $path = $dir.'/netwatch.php';
 
     $probesPhp = "[\n";
     foreach ($config['probes'] as $name => $probe) {
@@ -29,16 +29,17 @@ return [
     'probes' => {$probesPhp},
 ];
 PHP);
+
     return $path;
 }
 
 beforeEach(function () {
-    $this->configDir = sys_get_temp_dir() . '/netwatch_test_' . uniqid();
+    $this->configDir = sys_get_temp_dir().'/netwatch_test_'.uniqid();
     mkdir($this->configDir);
 });
 
 afterEach(function () {
-    array_map('unlink', glob($this->configDir . '/*'));
+    array_map('unlink', glob($this->configDir.'/*'));
     rmdir($this->configDir);
 });
 
@@ -59,7 +60,7 @@ test('fromConfig throws on missing file', function () {
 })->throws(InvalidArgumentException::class, 'Config file not found');
 
 test('fromConfig throws on invalid config', function () {
-    $path = $this->configDir . '/bad.php';
+    $path = $this->configDir.'/bad.php';
     file_put_contents($path, '<?php return "not an array";');
 
     Netwatch::fromConfig($path);

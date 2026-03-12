@@ -13,7 +13,7 @@ class Authorize
     {
         $callback = Netwatch::authUsing();
 
-        if ($callback && !$callback($request)) {
+        if ($callback && ! $callback($request)) {
             abort(403);
         }
 

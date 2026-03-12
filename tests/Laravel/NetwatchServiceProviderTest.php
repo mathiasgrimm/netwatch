@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\ServiceProvider;
 use Mathiasgrimm\Netwatch\Laravel\NetwatchServiceProvider;
 use Mathiasgrimm\Netwatch\Netwatch;
 use Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe;
+use Orchestra\Testbench\TestCase;
 
-uses(Orchestra\Testbench\TestCase::class);
+uses(TestCase::class);
 
 function getPackageProviders($app): array
 {
@@ -54,7 +57,7 @@ test('singleton resolves with probes from config', function () {
     config([
         'netwatch.probes' => [
             'test' => [
-                'probe' => new SuccessProbe(),
+                'probe' => new SuccessProbe,
             ],
         ],
     ]);
@@ -70,12 +73,12 @@ test('singleton resolves with probes from config', function () {
 });
 
 test('artisan netwatch:run command is registered', function () {
-    $commands = array_keys(\Illuminate\Support\Facades\Artisan::all());
+    $commands = array_keys(Artisan::all());
     expect($commands)->toContain('netwatch:run');
 });
 
 test('artisan netwatch:init command is registered', function () {
-    $commands = array_keys(\Illuminate\Support\Facades\Artisan::all());
+    $commands = array_keys(Artisan::all());
     expect($commands)->toContain('netwatch:init');
 });
 
@@ -84,7 +87,7 @@ test('artisan netwatch:run works with json output', function () {
         'netwatch.iterations' => 2,
         'netwatch.probes' => [
             'test-probe' => [
-                'probe' => new SuccessProbe(),
+                'probe' => new SuccessProbe,
             ],
         ],
     ]);
@@ -138,7 +141,7 @@ test('health route returns json with probe results', function () {
         'netwatch.iterations' => 2,
         'netwatch.probes' => [
             'my-probe' => [
-                'probe' => new SuccessProbe(),
+                'probe' => new SuccessProbe,
             ],
         ],
     ]);
@@ -164,7 +167,7 @@ test('health route returns json with probe results', function () {
 });
 
 test('config can be published', function () {
-    $publishable = \Illuminate\Support\ServiceProvider::$publishes[NetwatchServiceProvider::class] ?? [];
+    $publishable = ServiceProvider::$publishes[NetwatchServiceProvider::class] ?? [];
 
     expect($publishable)->not->toBeEmpty();
 

@@ -23,7 +23,7 @@ class AggregateResult
             'failures' => $this->failures,
         ];
 
-        if (!$withoutResults) {
+        if (! $withoutResults) {
             $data['results'] = array_map(fn (ProbeResult $r) => $r->toArray(), $this->results);
         }
 

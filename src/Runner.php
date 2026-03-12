@@ -20,7 +20,7 @@ class Runner
             $result = $probe->probe();
             $results[] = $result;
 
-            if (!$result->success) {
+            if (! $result->success) {
                 $failures++;
                 $consecutiveFailures++;
 

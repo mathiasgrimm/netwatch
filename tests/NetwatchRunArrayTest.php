@@ -8,9 +8,9 @@ use Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe;
 test('run with array of probe names returns only those probes', function () {
     $netwatch = new Netwatch(
         probes: [
-            'probe-a' => ['probe' => new SuccessProbe(), 'iterations' => 2],
-            'probe-b' => ['probe' => new SuccessProbe(), 'iterations' => 2],
-            'probe-c' => ['probe' => new SuccessProbe(), 'iterations' => 2],
+            'probe-a' => ['probe' => new SuccessProbe, 'iterations' => 2],
+            'probe-b' => ['probe' => new SuccessProbe, 'iterations' => 2],
+            'probe-c' => ['probe' => new SuccessProbe, 'iterations' => 2],
         ],
         defaultIterations: 2,
     );
@@ -26,7 +26,7 @@ test('run with array of probe names returns only those probes', function () {
 test('run with array containing nonexistent probe throws', function () {
     $netwatch = new Netwatch(
         probes: [
-            'probe-a' => ['probe' => new SuccessProbe()],
+            'probe-a' => ['probe' => new SuccessProbe],
         ],
         defaultIterations: 1,
     );
@@ -37,8 +37,8 @@ test('run with array containing nonexistent probe throws', function () {
 test('run with null still runs all probes', function () {
     $netwatch = new Netwatch(
         probes: [
-            'probe-a' => ['probe' => new SuccessProbe(), 'iterations' => 1],
-            'probe-b' => ['probe' => new SuccessProbe(), 'iterations' => 1],
+            'probe-a' => ['probe' => new SuccessProbe, 'iterations' => 1],
+            'probe-b' => ['probe' => new SuccessProbe, 'iterations' => 1],
         ],
         defaultIterations: 1,
     );
@@ -53,8 +53,8 @@ test('run with null still runs all probes', function () {
 test('run with string still works as before', function () {
     $netwatch = new Netwatch(
         probes: [
-            'probe-a' => ['probe' => new SuccessProbe(), 'iterations' => 1],
-            'probe-b' => ['probe' => new SuccessProbe(), 'iterations' => 1],
+            'probe-a' => ['probe' => new SuccessProbe, 'iterations' => 1],
+            'probe-b' => ['probe' => new SuccessProbe, 'iterations' => 1],
         ],
         defaultIterations: 1,
     );
