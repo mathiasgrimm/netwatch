@@ -13,6 +13,8 @@ class Netwatch
 
     private static ?\Closure $authUsing = null;
 
+    private static ?\Closure $resolveProbesUsing = null;
+
     public static function auth(\Closure $callback): void
     {
         static::$authUsing = $callback;
@@ -21,6 +23,11 @@ class Netwatch
     public static function authUsing(): ?\Closure
     {
         return static::$authUsing;
+    }
+
+    public static function resolveProbesUsing(?\Closure $callback): void
+    {
+        static::$resolveProbesUsing = $callback;
     }
 
     /**
@@ -46,12 +53,17 @@ class Netwatch
             throw new \InvalidArgumentException("Config must return an array with a 'probes' key");
         }
 
+        return self::fromArray($config);
+    }
+
+    public static function fromArray(array $config): self
+    {
         $probes = array_filter(
-            $config['probes'],
-            fn (array $probe) => $probe['enabled'] ?? true,
+            $config['probes'] ?? [],
+            fn (array $probe) => $probe['enabled'] ?? false,
         );
 
-        $probes = self::resolveArrayProbes($probes);
+        $probes = self::resolveProbes($probes);
 
         return new self(
             probes: $probes,
@@ -66,22 +78,18 @@ class Netwatch
      */
     public function run(string|array|null $probeName = null, ?int $iterations = null): array
     {
-        $probes = $this->probes;
+        if ($probeName !== null) {
+            $probeName = (array) $probeName;
 
-        if (is_string($probeName)) {
-            if (! isset($probes[$probeName])) {
-                throw new \InvalidArgumentException("Probe not found: {$probeName}");
-            }
-            $probes = [$probeName => $probes[$probeName]];
-        } elseif (is_array($probeName)) {
-            $filtered = [];
             foreach ($probeName as $name) {
-                if (! isset($probes[$name])) {
+                if (! isset($this->probes[$name])) {
                     throw new \InvalidArgumentException("Probe not found: {$name}");
                 }
-                $filtered[$name] = $probes[$name];
             }
-            $probes = $filtered;
+
+            $probes = array_intersect_key($this->probes, array_flip($probeName));
+        } else {
+            $probes = $this->probes;
         }
 
         $results = [];
@@ -117,25 +125,34 @@ class Netwatch
      * @param  array<string, array{probe: mixed}>  $probes
      * @return array<string, array{probe: mixed}>
      */
-    public static function resolveArrayProbes(array $probes): array
+    public static function resolveProbes(array $probes): array
     {
         foreach ($probes as $name => $probe) {
-            if (is_array($probe['probe'])) {
-                $class = array_key_first($probe['probe']);
-                $args = $probe['probe'][$class];
-
-                try {
-                    $probes[$name]['probe'] = new $class(...$args);
-                } catch (\Throwable $e) {
-                    throw new \RuntimeException(
-                        "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
-                        previous: $e,
-                    );
-                }
-            }
+            $probes[$name]['probe'] = static::$resolveProbesUsing
+                ? (static::$resolveProbesUsing)($name, $probe['probe'])
+                : self::resolveProbe($name, $probe['probe']);
         }
 
         return $probes;
+    }
+
+    public static function resolveProbe(string $name, mixed $probe): mixed
+    {
+        if (is_array($probe)) {
+            $class = array_key_first($probe);
+            $args = $probe[$class];
+
+            try {
+                return new $class(...$args);
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                    "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
+                    previous: $e,
+                );
+            }
+        }
+
+        return $probe;
     }
 
     /**

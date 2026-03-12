@@ -57,6 +57,7 @@ test('singleton resolves with probes from config', function () {
     config([
         'netwatch.probes' => [
             'test' => [
+                'enabled' => true,
                 'probe' => new SuccessProbe,
             ],
         ],
@@ -76,9 +77,30 @@ test('singleton resolves array-based probe config', function () {
     config([
         'netwatch.probes' => [
             'test' => [
+                'enabled' => true,
                 'probe' => [
                     SuccessProbe::class => [],
                 ],
+            ],
+        ],
+    ]);
+    $this->app->forgetInstance(Netwatch::class);
+
+    $netwatch = $this->app->make(Netwatch::class);
+    expect($netwatch->probeNames())->toBe(['test']);
+
+    $results = $netwatch->run();
+    expect($results['test']->failures)->toBe(0);
+});
+
+test('singleton resolves string-based probe via container', function () {
+    $this->app->bind('test-probe', fn () => new SuccessProbe);
+
+    config([
+        'netwatch.probes' => [
+            'test' => [
+                'enabled' => true,
+                'probe' => 'test-probe',
             ],
         ],
     ]);
@@ -106,6 +128,7 @@ test('artisan netwatch:run works with json output', function () {
         'netwatch.iterations' => 2,
         'netwatch.probes' => [
             'test-probe' => [
+                'enabled' => true,
                 'probe' => new SuccessProbe,
             ],
         ],
@@ -160,6 +183,7 @@ test('health route returns json with probe results', function () {
         'netwatch.iterations' => 2,
         'netwatch.probes' => [
             'my-probe' => [
+                'enabled' => true,
                 'probe' => new SuccessProbe,
             ],
         ],

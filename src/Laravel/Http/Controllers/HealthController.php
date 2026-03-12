@@ -43,7 +43,7 @@ class HealthController
             // Collect disabled probe names from the raw config
             $disabledProbes = [];
             foreach (config('netwatch.probes', []) as $name => $probeConfig) {
-                $enabled = $probeConfig['enabled'] ?? true;
+                $enabled = $probeConfig['enabled'] ?? false;
                 if (! $enabled && ! isset($data[$name])) {
                     $disabledProbes[] = $name;
                 }

@@ -18,20 +18,23 @@ class NetwatchServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/config/netwatch.php', 'netwatch');
 
+        Netwatch::resolveProbesUsing(function (string $name, mixed $probe) {
+            if (is_string($probe)) {
+                try {
+                    return $this->app->make($probe);
+                } catch (Throwable $e) {
+                    throw new \RuntimeException(
+                        "Netwatch: failed to resolve probe '{$name}' ({$probe}) from container: {$e->getMessage()}",
+                        previous: $e,
+                    );
+                }
+            }
+
+            return Netwatch::resolveProbe($name, $probe);
+        });
+
         $this->app->singleton(Netwatch::class, function () {
-            $config = config('netwatch');
-
-            $probes = array_filter(
-                $config['probes'] ?? [],
-                fn (array $probe) => $probe['enabled'] ?? true,
-            );
-
-            $probes = $this->resolveProbes($probes);
-
-            return new Netwatch(
-                probes: $probes,
-                defaultIterations: $config['iterations'] ?? 10,
-            );
+            return Netwatch::fromArray(config('netwatch'));
         });
     }
 
@@ -48,26 +51,6 @@ class NetwatchServiceProvider extends ServiceProvider
                 InitCommand::class,
             ]);
         }
-    }
-
-    private function resolveProbes(array $probes): array
-    {
-        $probes = Netwatch::resolveArrayProbes($probes);
-
-        foreach ($probes as $name => $probe) {
-            if (is_string($probe['probe'])) {
-                try {
-                    $probes[$name]['probe'] = $this->app->make($probe['probe']);
-                } catch (Throwable $e) {
-                    throw new \RuntimeException(
-                        "Netwatch: failed to resolve probe '{$name}' ({$probe['probe']}) from container: {$e->getMessage()}",
-                        previous: $e,
-                    );
-                }
-            }
-        }
-
-        return $probes;
     }
 
     private function registerRoutes(): void
