@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Find autoloader
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',       // when installed as project
+    __DIR__ . '/../../../autoload.php',         // when installed as dependency
+];
+
+$autoloaded = false;
+foreach ($autoloadPaths as $path) {
+    if (file_exists($path)) {
+        require $path;
+        $autoloaded = true;
+        break;
+    }
+}
+
+if (!$autoloaded) {
+    fwrite(STDERR, "Could not find autoload.php. Run 'composer install' first.\n");
+    exit(1);
+}
+
+use Mathiasgrimm\Netwatch\Console\InitCommand;
+use Mathiasgrimm\Netwatch\Console\NetwatchCommand;
+use Symfony\Component\Console\Application;
+
+$app = new Application('netwatch', '1.0.0');
+$app->add(new NetwatchCommand());
+$app->add(new InitCommand());
+$app->setDefaultCommand('netwatch:run');
+$app->run();

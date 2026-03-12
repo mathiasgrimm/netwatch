@@ -1,0 +1,51 @@
+{
+    "name": "mathiasgrimm/netwatch",
+    "description": "Network service latency probing tool for PHP — measures Redis, PostgreSQL, MySQL, S3, HTTP endpoints with statistical analysis",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Mathiasgrimm\\Netwatch\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mathiasgrimm\\Netwatch\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Mathias Grimm",
+            "email": "mathiasgrimm@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "symfony/console": "^6.0 || ^7.0 || ^8.0",
+        "symfony/process": "^6.0 || ^7.0 || ^8.0"
+    },
+    "suggest": {
+        "illuminate/support": "Required for Laravel integration (^10.0 || ^11.0 || ^12.0)"
+    },
+    "bin": [
+        "bin/netwatch"
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mathiasgrimm\\Netwatch\\Laravel\\NetwatchServiceProvider"
+            ]
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.4",
+        "orchestra/testbench-core": "^10.9",
+        "laravel/framework": "^12.54",
+        "mockery/mockery": "^1.6"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

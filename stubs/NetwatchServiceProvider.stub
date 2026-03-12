@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\Gate;
+use Mathiasgrimm\Netwatch\Laravel\NetwatchApplicationServiceProvider;
+
+class NetwatchServiceProvider extends NetwatchApplicationServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        parent::boot();
+    }
+
+    /**
+     * Register the Netwatch gate.
+     *
+     * This gate determines who can access Netwatch in non-local environments.
+     */
+    protected function gate(): void
+    {
+        Gate::define('viewNetwatch', function ($user = null) {
+            return in_array(optional($user)->email, [
+                //
+            ]);
+        });
+    }
+}
