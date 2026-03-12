@@ -18,8 +18,8 @@ beforeEach(function () {
         'netwatch.health_route.middleware' => [],
         'netwatch.iterations' => 2,
         'netwatch.probes' => [
-            'test-success' => ['probe' => new SuccessProbe],
-            'test-failing' => ['probe' => new FailingProbe],
+            'test-success' => ['enabled' => true, 'probe' => new SuccessProbe],
+            'test-failing' => ['enabled' => true, 'probe' => new FailingProbe],
         ],
     ]);
 
@@ -73,7 +73,7 @@ test('returns JSON for curl default Accept header', function () {
 test('HTML shows healthy status when zero failures', function () {
     config([
         'netwatch.probes' => [
-            'test-success' => ['probe' => new SuccessProbe],
+            'test-success' => ['enabled' => true, 'probe' => new SuccessProbe],
         ],
     ]);
     $this->app->forgetInstance(Netwatch::class);
@@ -88,7 +88,7 @@ test('HTML shows healthy status when zero failures', function () {
 test('HTML shows unhealthy status when all probes fail', function () {
     config([
         'netwatch.probes' => [
-            'test-failing' => ['probe' => new FailingProbe],
+            'test-failing' => ['enabled' => true, 'probe' => new FailingProbe],
         ],
     ]);
     $this->app->forgetInstance(Netwatch::class);

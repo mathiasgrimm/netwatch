@@ -10,6 +10,8 @@ use Mathiasgrimm\Netwatch\Console\InitCommand;
 use Mathiasgrimm\Netwatch\Laravel\Console\NetwatchCommand;
 use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
 use Mathiasgrimm\Netwatch\Netwatch;
+use RuntimeException;
+use Throwable;
 
 class NetwatchServiceProvider extends ServiceProvider
 {
@@ -17,25 +19,23 @@ class NetwatchServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/config/netwatch.php', 'netwatch');
 
-        $this->app->singleton(Netwatch::class, function () {
-            $config = config('netwatch');
-
-            $probes = array_filter(
-                $config['probes'] ?? [],
-                fn (array $probe) => $probe['enabled'] ?? true,
-            );
-
-            // Resolve closure-based probe definitions
-            foreach ($probes as $name => $probe) {
-                if ($probe['probe'] instanceof \Closure) {
-                    $probes[$name]['probe'] = $probe['probe']();
+        Netwatch::resolveProbesUsing(function (string $name, mixed $probe) {
+            if (is_string($probe)) {
+                try {
+                    return $this->app->make($probe);
+                } catch (Throwable $e) {
+                    throw new RuntimeException(
+                        "Netwatch: failed to resolve probe '{$name}' ({$probe}) from container: {$e->getMessage()}",
+                        previous: $e,
+                    );
                 }
             }
 
-            return new Netwatch(
-                probes: $probes,
-                defaultIterations: $config['iterations'] ?? 10,
-            );
+            return Netwatch::resolveProbe($name, $probe);
+        });
+
+        $this->app->singleton(Netwatch::class, function () {
+            return Netwatch::fromArray(config('netwatch'));
         });
     }
 

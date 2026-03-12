@@ -6,6 +6,8 @@ namespace Mathiasgrimm\Netwatch\Probe;
 
 use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
 use Mathiasgrimm\Netwatch\Result\ProbeResult;
+use Redis;
+use Throwable;
 
 class PhpRedisProbe implements ProbeInterface
 {
@@ -33,7 +35,7 @@ class PhpRedisProbe implements ProbeInterface
         $start = hrtime(true);
 
         try {
-            $redis = new \Redis;
+            $redis = new Redis;
 
             $useTls = in_array($this->scheme, ['tls', 'rediss', 'tls6', 'ssl'], true);
             $host = $useTls ? "tls://{$this->host}" : $this->host;
@@ -67,7 +69,7 @@ class PhpRedisProbe implements ProbeInterface
                 success: $success,
                 error: $success ? null : 'Unexpected response: '.var_export($response, true),
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $totalMs = (hrtime(true) - $start) / 1_000_000;
             $connectMs ??= $totalMs;
             $requestMs = $totalMs - $connectMs;

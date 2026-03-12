@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Mathiasgrimm\Netwatch\Netwatch;
 use Mathiasgrimm\Netwatch\Result\AggregateResult;
+use Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe;
 
 function writeTestConfig(string $dir, array $config): string
 {
@@ -12,6 +13,7 @@ function writeTestConfig(string $dir, array $config): string
     $probesPhp = "[\n";
     foreach ($config['probes'] as $name => $probe) {
         $probesPhp .= "        '$name' => [\n";
+        $probesPhp .= "            'enabled' => true,\n";
         $probesPhp .= "            'probe' => {$probe['probe']},\n";
         if (isset($probe['iterations'])) {
             $probesPhp .= "            'iterations' => {$probe['iterations']},\n";
@@ -41,6 +43,7 @@ beforeEach(function () {
 afterEach(function () {
     array_map('unlink', glob($this->configDir.'/*'));
     rmdir($this->configDir);
+    Netwatch::resolveProbesUsing(null);
 });
 
 test('fromConfig loads file', function () {
@@ -149,6 +152,125 @@ test('default iterations is 10', function () {
 
     expect($results['test']->iterations)->toBe(10);
 });
+
+test('fromArray resolves array-based probe config', function () {
+    $netwatch = Netwatch::fromArray([
+        'iterations' => 2,
+        'probes' => [
+            'test' => [
+                'enabled' => true,
+                'probe' => [
+                    SuccessProbe::class => [],
+                ],
+            ],
+        ],
+    ]);
+
+    expect($netwatch->probeNames())->toBe(['test']);
+
+    $results = $netwatch->run();
+    expect($results['test']->failures)->toBe(0)
+        ->and($results['test']->iterations)->toBe(2);
+});
+
+test('fromArray filters disabled probes', function () {
+    $netwatch = Netwatch::fromArray([
+        'probes' => [
+            'enabled' => [
+                'enabled' => true,
+                'probe' => new SuccessProbe,
+            ],
+            'disabled' => [
+                'enabled' => false,
+                'probe' => new SuccessProbe,
+            ],
+        ],
+    ]);
+
+    expect($netwatch->probeNames())->toBe(['enabled']);
+});
+
+test('fromArray with direct instance probe', function () {
+    $netwatch = Netwatch::fromArray([
+        'probes' => [
+            'test' => [
+                'enabled' => true,
+                'probe' => new SuccessProbe,
+            ],
+        ],
+    ]);
+
+    expect($netwatch->probeNames())->toBe(['test']);
+});
+
+test('resolveProbesUsing closure is called for each probe', function () {
+    Netwatch::resolveProbesUsing(function (string $name, mixed $probe) {
+        return new SuccessProbe;
+    });
+
+    $netwatch = Netwatch::fromArray([
+        'probes' => [
+            'custom' => [
+                'enabled' => true,
+                'probe' => 'some-string-reference',
+            ],
+        ],
+    ]);
+
+    expect($netwatch->probeNames())->toBe(['custom']);
+
+    $results = $netwatch->run();
+    expect($results['custom']->failures)->toBe(0);
+});
+
+test('resolveProbesUsing can delegate to resolveProbe', function () {
+    Netwatch::resolveProbesUsing(function (string $name, mixed $probe) {
+        return Netwatch::resolveProbe($name, $probe);
+    });
+
+    $netwatch = Netwatch::fromArray([
+        'probes' => [
+            'test' => [
+                'enabled' => true,
+                'probe' => [
+                    SuccessProbe::class => [],
+                ],
+            ],
+        ],
+    ]);
+
+    expect($netwatch->probeNames())->toBe(['test']);
+});
+
+test('resolveProbe handles class string with no args', function () {
+    $netwatch = Netwatch::fromArray([
+        'probes' => [
+            'test' => [
+                'enabled' => true,
+                'probe' => SuccessProbe::class,
+            ],
+        ],
+    ]);
+
+    expect($netwatch->probeNames())->toBe(['test']);
+
+    $results = $netwatch->run();
+    expect($results['test']->failures)->toBe(0);
+});
+
+test('ensureProbeContract rejects non-ProbeInterface', function () {
+    new Netwatch(probes: [
+        'bad' => ['probe' => 'not-a-probe'],
+    ]);
+})->throws(InvalidArgumentException::class, "probe 'bad' must implement ProbeInterface");
+
+test('resolveProbe throws on invalid array class', function () {
+    Netwatch::resolveProbe('broken', ['NonExistentClass12345' => []]);
+})->throws(RuntimeException::class, "failed to instantiate probe 'broken'");
+
+test('resolveProbe throws on invalid string class', function () {
+    Netwatch::resolveProbe('broken', 'NonExistentClass12345');
+})->throws(RuntimeException::class, "failed to instantiate probe 'broken'");
 
 test('probeNames returns all names', function () {
     $path = writeTestConfig($this->configDir, [

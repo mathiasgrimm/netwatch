@@ -9,6 +9,7 @@ use Mathiasgrimm\Netwatch\Netwatch;
 use Mathiasgrimm\Netwatch\Result\AggregateResult;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
+use Throwable;
 
 class NetwatchCommand extends Command
 {
@@ -27,7 +28,7 @@ class NetwatchCommand extends Command
 
         try {
             $results = $netwatch->run($probeName, $iterations);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error($e->getMessage());
 
             return self::FAILURE;

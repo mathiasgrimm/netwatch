@@ -50,56 +50,66 @@ return [
 
         'database' => [
             'enabled' => env('NETWATCH_PROBE_DATABASE_ENABLED', false),
-            'probe' => fn () => new PdoProbe(
-                env('DB_CONNECTION').':host='.env('DB_HOST').';port='.env('DB_PORT').';dbname='.env('DB_DATABASE'),
-                env('DB_USERNAME'),
-                env('DB_PASSWORD'),
-            ),
+            'probe' => [
+                PdoProbe::class => [
+                    env('DB_CONNECTION').':host='.env('DB_HOST').';port='.env('DB_PORT').';dbname='.env('DB_DATABASE'),
+                    env('DB_USERNAME'),
+                    env('DB_PASSWORD'),
+                ],
+            ],
         ],
 
         'redis' => [
             'enabled' => env('NETWATCH_PROBE_REDIS_ENABLED', false),
-            'probe' => fn () => new PhpRedisProbe(
-                address: env('REDIS_HOST').':'.env('REDIS_PORT'),
-                username: env('REDIS_USERNAME'),
-                password: env('REDIS_PASSWORD'),
-            ),
+            'probe' => [
+                PhpRedisProbe::class => [
+                    env('REDIS_HOST').':'.env('REDIS_PORT'),
+                    env('REDIS_USERNAME'),
+                    env('REDIS_PASSWORD'),
+                ],
+            ],
         ],
 
         's3' => [
             'enabled' => env('NETWATCH_PROBE_S3_ENABLED', false),
-            'probe' => fn () => new S3Probe(
-                bucket: env('AWS_BUCKET'),
-                region: env('AWS_DEFAULT_REGION'),
-                key: env('AWS_ACCESS_KEY_ID'),
-                secret: env('AWS_SECRET_ACCESS_KEY'),
-                endpoint: env('AWS_ENDPOINT'),
-            ),
+            'probe' => [
+                S3Probe::class => [
+                    env('AWS_BUCKET'),
+                    env('AWS_DEFAULT_REGION'),
+                    env('AWS_ACCESS_KEY_ID'),
+                    env('AWS_SECRET_ACCESS_KEY'),
+                    env('AWS_ENDPOINT'),
+                ],
+            ],
         ],
 
         'app' => [
             'enabled' => env('NETWATCH_PROBE_APP_ENABLED', false),
-            'probe' => fn () => new HttpProbe(env('APP_URL')),
+            'probe' => [
+                HttpProbe::class => [
+                    env('APP_URL'),
+                ],
+            ],
         ],
 
         'cloudflare-dns' => [
             'enabled' => env('NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED', false),
-            'probe' => fn () => new TcpPingProbe('1.1.1.1', 53),
+            'probe' => [
+                TcpPingProbe::class => [
+                    '1.1.1.1',
+                    53,
+                ],
+            ],
         ],
 
         'google-dns' => [
             'enabled' => env('NETWATCH_PROBE_GOOGLE_DNS_ENABLED', false),
-            'probe' => fn () => new TcpPingProbe('8.8.8.8', 53),
-        ],
-
-        'github.com' => [
-            'enabled' => env('NETWATCH_PROBE_GITHUB_COM_ENABLED', false),
-            'probe' => fn () => new HttpProbe('https://github.com'),
-        ],
-
-        'github.org' => [
-            'enabled' => env('NETWATCH_PROBE_GITHUB_ORG_ENABLED', false),
-            'probe' => fn () => new HttpProbe('https://github.org'),
+            'probe' => [
+                TcpPingProbe::class => [
+                    '8.8.8.8',
+                    53,
+                ],
+            ],
         ],
 
     ],

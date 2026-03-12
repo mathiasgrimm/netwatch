@@ -4,23 +4,34 @@ declare(strict_types=1);
 
 namespace Mathiasgrimm\Netwatch;
 
+use Closure;
+use InvalidArgumentException;
 use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
 use Mathiasgrimm\Netwatch\Result\AggregateResult;
+use RuntimeException;
+use Throwable;
 
 class Netwatch
 {
     private Runner $runner;
 
-    private static ?\Closure $authUsing = null;
+    private static ?Closure $authUsing = null;
 
-    public static function auth(\Closure $callback): void
+    private static ?Closure $resolveProbesUsing = null;
+
+    public static function auth(Closure $callback): void
     {
         static::$authUsing = $callback;
     }
 
-    public static function authUsing(): ?\Closure
+    public static function authUsing(): ?Closure
     {
         return static::$authUsing;
+    }
+
+    public static function resolveProbesUsing(?Closure $callback): void
+    {
+        static::$resolveProbesUsing = $callback;
     }
 
     /**
@@ -30,32 +41,33 @@ class Netwatch
         private readonly array $probes,
         private readonly int $defaultIterations = 10,
     ) {
+        self::ensureProbeContract($probes);
         $this->runner = new Runner;
     }
 
     public static function fromConfig(string $configPath): self
     {
         if (! file_exists($configPath)) {
-            throw new \InvalidArgumentException("Config file not found: {$configPath}");
+            throw new InvalidArgumentException("Config file not found: {$configPath}");
         }
 
         $config = require $configPath;
 
         if (! is_array($config) || ! isset($config['probes'])) {
-            throw new \InvalidArgumentException("Config must return an array with a 'probes' key");
+            throw new InvalidArgumentException("Config must return an array with a 'probes' key");
         }
 
+        return self::fromArray($config);
+    }
+
+    public static function fromArray(array $config): self
+    {
         $probes = array_filter(
-            $config['probes'],
-            fn (array $probe) => $probe['enabled'] ?? true,
+            $config['probes'] ?? [],
+            fn (array $probe) => $probe['enabled'] ?? false,
         );
 
-        // Resolve closure-based probe definitions
-        foreach ($probes as $name => $probe) {
-            if ($probe['probe'] instanceof \Closure) {
-                $probes[$name]['probe'] = $probe['probe']();
-            }
-        }
+        $probes = self::resolveProbes($probes);
 
         return new self(
             probes: $probes,
@@ -70,22 +82,18 @@ class Netwatch
      */
     public function run(string|array|null $probeName = null, ?int $iterations = null): array
     {
-        $probes = $this->probes;
+        if ($probeName !== null) {
+            $probeName = (array) $probeName;
 
-        if (is_string($probeName)) {
-            if (! isset($probes[$probeName])) {
-                throw new \InvalidArgumentException("Probe not found: {$probeName}");
-            }
-            $probes = [$probeName => $probes[$probeName]];
-        } elseif (is_array($probeName)) {
-            $filtered = [];
             foreach ($probeName as $name) {
-                if (! isset($probes[$name])) {
-                    throw new \InvalidArgumentException("Probe not found: {$name}");
+                if (! isset($this->probes[$name])) {
+                    throw new InvalidArgumentException("Probe not found: {$name}");
                 }
-                $filtered[$name] = $probes[$name];
             }
-            $probes = $filtered;
+
+            $probes = array_intersect_key($this->probes, array_flip($probeName));
+        } else {
+            $probes = $this->probes;
         }
 
         $results = [];
@@ -98,6 +106,75 @@ class Netwatch
         }
 
         return $results;
+    }
+
+    /**
+     * @param  array<string, array{probe: mixed}>  $probes
+     */
+    private static function ensureProbeContract(array $probes): void
+    {
+        foreach ($probes as $name => $probe) {
+            if (! $probe['probe'] instanceof ProbeInterface) {
+                $type = get_debug_type($probe['probe']);
+                throw new InvalidArgumentException(
+                    "Netwatch: probe '{$name}' must implement ProbeInterface, got {$type}",
+                );
+            }
+        }
+    }
+
+    /**
+     * Resolve array-based probe definitions: [Class::class => [args]] → new Class(...args)
+     *
+     * @param  array<string, array{probe: mixed}>  $probes
+     * @return array<string, array{probe: mixed}>
+     */
+    public static function resolveProbes(array $probes): array
+    {
+        foreach ($probes as $name => $probe) {
+            $probes[$name]['probe'] = static::$resolveProbesUsing
+                ? (static::$resolveProbesUsing)($name, $probe['probe'])
+                : self::resolveProbe($name, $probe['probe']);
+        }
+
+        return $probes;
+    }
+
+    public static function resolveProbe(string $name, mixed $probe): mixed
+    {
+        if ($probe instanceof ProbeInterface) {
+            return $probe;
+        }
+
+        if (is_string($probe)) {
+            try {
+                return new $probe;
+            } catch (Throwable $e) {
+                throw new RuntimeException(
+                    "Netwatch: failed to instantiate probe '{$name}' ({$probe}): {$e->getMessage()}",
+                    previous: $e,
+                );
+            }
+        }
+
+        if (! is_array($probe)) {
+            $type = get_debug_type($probe);
+            throw new InvalidArgumentException(
+                "Netwatch: probe '{$name}' has unsupported type {$type}, expected [Class::class => [args]] array or class string",
+            );
+        }
+
+        $class = array_key_first($probe);
+        $args = $probe[$class];
+
+        try {
+            return new $class(...$args);
+        } catch (Throwable $e) {
+            throw new RuntimeException(
+                "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
+                previous: $e,
+            );
+        }
     }
 
     /**

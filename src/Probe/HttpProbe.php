@@ -33,7 +33,7 @@ class HttpProbe implements ProbeInterface
             CURLOPT_FORBID_REUSE => true,
         ]);
 
-        $result = curl_exec($ch);
+        curl_exec($ch);
         $errno = curl_errno($ch);
 
         if ($errno !== 0) {
