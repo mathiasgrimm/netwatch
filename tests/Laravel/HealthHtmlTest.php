@@ -6,8 +6,9 @@ use Mathiasgrimm\Netwatch\Laravel\NetwatchServiceProvider;
 use Mathiasgrimm\Netwatch\Netwatch;
 use Mathiasgrimm\Netwatch\Tests\Fixtures\FailingProbe;
 use Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe;
+use Orchestra\Testbench\TestCase;
 
-uses(Orchestra\Testbench\TestCase::class);
+uses(TestCase::class);
 
 beforeEach(function () {
     $this->app->register(NetwatchServiceProvider::class);
@@ -17,8 +18,8 @@ beforeEach(function () {
         'netwatch.health_route.middleware' => [],
         'netwatch.iterations' => 2,
         'netwatch.probes' => [
-            'test-success' => ['probe' => new SuccessProbe()],
-            'test-failing' => ['probe' => new FailingProbe()],
+            'test-success' => ['probe' => new SuccessProbe],
+            'test-failing' => ['probe' => new FailingProbe],
         ],
     ]);
 
@@ -72,7 +73,7 @@ test('returns JSON for curl default Accept header', function () {
 test('HTML shows healthy status when zero failures', function () {
     config([
         'netwatch.probes' => [
-            'test-success' => ['probe' => new SuccessProbe()],
+            'test-success' => ['probe' => new SuccessProbe],
         ],
     ]);
     $this->app->forgetInstance(Netwatch::class);
@@ -87,7 +88,7 @@ test('HTML shows healthy status when zero failures', function () {
 test('HTML shows unhealthy status when all probes fail', function () {
     config([
         'netwatch.probes' => [
-            'test-failing' => ['probe' => new FailingProbe()],
+            'test-failing' => ['probe' => new FailingProbe],
         ],
     ]);
     $this->app->forgetInstance(Netwatch::class);

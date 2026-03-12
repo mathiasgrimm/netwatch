@@ -8,6 +8,7 @@ use Mathiasgrimm\Netwatch\Netwatch;
 use Mathiasgrimm\Netwatch\Result\AggregateResult;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -39,7 +40,7 @@ class NetwatchCommand extends Command
         $sequential = $input->getOption('sequential');
         $withoutResults = $input->getOption('without-results');
 
-        if (!$sequential && !$probeName) {
+        if (! $sequential && ! $probeName) {
             return $this->executeParallel($input, $output, $configPath, $iterations, $jsonOutput, $withoutResults);
         }
 
@@ -48,6 +49,7 @@ class NetwatchCommand extends Command
             $results = $netwatch->run($probeName, $iterations);
         } catch (\Throwable $e) {
             $output->writeln("<error>{$e->getMessage()}</error>");
+
             return Command::FAILURE;
         }
 
@@ -73,8 +75,8 @@ class NetwatchCommand extends Command
         bool $withoutResults = false,
     ): int {
         // Resolve absolute config path for subprocesses
-        if (!str_starts_with($configPath, '/')) {
-            $configPath = getcwd() . '/' . $configPath;
+        if (! str_starts_with($configPath, '/')) {
+            $configPath = getcwd().'/'.$configPath;
         }
 
         // Load config to discover probe names
@@ -83,6 +85,7 @@ class NetwatchCommand extends Command
             $probeNames = $netwatch->probeNames();
         } catch (\Throwable $e) {
             $output->writeln("<error>{$e->getMessage()}</error>");
+
             return Command::FAILURE;
         }
 
@@ -110,14 +113,16 @@ class NetwatchCommand extends Command
         foreach ($processes as $name => $process) {
             $process->wait();
 
-            if (!$process->isSuccessful()) {
+            if (! $process->isSuccessful()) {
                 $errors[$name] = trim($process->getErrorOutput() ?: $process->getOutput());
+
                 continue;
             }
 
             $data = json_decode($process->getOutput(), true);
-            if (!is_array($data)) {
+            if (! is_array($data)) {
                 $errors[$name] = 'Failed to parse JSON output';
+
                 continue;
             }
 
@@ -138,6 +143,7 @@ class NetwatchCommand extends Command
 
         if (empty($results)) {
             $output->writeln('<error>All probes failed.</error>');
+
             return Command::FAILURE;
         }
 
@@ -145,13 +151,14 @@ class NetwatchCommand extends Command
     }
 
     /**
-     * @param array<string, AggregateResult> $results
+     * @param  array<string, AggregateResult>  $results
      */
     private function outputResults(OutputInterface $output, array $results, bool $jsonOutput, bool $withoutResults = false): int
     {
         if ($jsonOutput) {
             $data = array_map(fn (AggregateResult $r) => $r->toArray($withoutResults), $results);
             $output->writeln(json_encode($data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
             return Command::SUCCESS;
         }
 
@@ -161,7 +168,7 @@ class NetwatchCommand extends Command
     }
 
     /**
-     * @param array<string, AggregateResult> $results
+     * @param  array<string, AggregateResult>  $results
      */
     private function renderTable(OutputInterface $output, array $results): void
     {
@@ -208,7 +215,7 @@ class NetwatchCommand extends Command
             }
 
             if ($name !== $last) {
-                $table->addRow(new \Symfony\Component\Console\Helper\TableSeparator());
+                $table->addRow(new TableSeparator);
             }
         }
 

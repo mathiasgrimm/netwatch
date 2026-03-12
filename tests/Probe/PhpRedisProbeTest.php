@@ -24,7 +24,7 @@ test('probe fails on unreachable host', function () {
 
 test('probe succeeds on local redis', function () {
     $socket = @fsockopen('127.0.0.1', 6379, $errno, $errstr, 0.5);
-    if (!$socket) {
+    if (! $socket) {
         $this->markTestSkipped('Redis not available on localhost:6379');
     }
     fclose($socket);

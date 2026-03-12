@@ -24,12 +24,13 @@ class InitCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $targetPath = getcwd() . '/netwatch.php';
+        $targetPath = getcwd().'/netwatch.php';
         $laravel = $input->getOption('laravel') || $this->detectLaravel();
         $force = $input->getOption('force');
 
-        if (file_exists($targetPath) && !$force) {
+        if (file_exists($targetPath) && ! $force) {
             $output->writeln('<error>netwatch.php already exists. Use --force to overwrite.</error>');
+
             return Command::FAILURE;
         }
 
@@ -45,8 +46,8 @@ class InitCommand extends Command
 
     private function detectLaravel(): bool
     {
-        return file_exists(getcwd() . '/bootstrap/app.php')
-            && file_exists(getcwd() . '/artisan');
+        return file_exists(getcwd().'/bootstrap/app.php')
+            && file_exists(getcwd().'/artisan');
     }
 
     private function standaloneTemplate(): string

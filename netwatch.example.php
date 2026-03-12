@@ -1,8 +1,8 @@
 <?php
 
-use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
-use Mathiasgrimm\Netwatch\Probe\PdoProbe;
 use Mathiasgrimm\Netwatch\Probe\HttpProbe;
+use Mathiasgrimm\Netwatch\Probe\PdoProbe;
+use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
 use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
 
 return [

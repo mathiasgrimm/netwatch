@@ -44,7 +44,7 @@ class HealthController
             $disabledProbes = [];
             foreach (config('netwatch.probes', []) as $name => $probeConfig) {
                 $enabled = $probeConfig['enabled'] ?? true;
-                if (!$enabled && !isset($data[$name])) {
+                if (! $enabled && ! isset($data[$name])) {
                     $disabledProbes[] = $name;
                 }
             }
@@ -70,8 +70,12 @@ class HealthController
     private function shouldReturnHtml(Request $request): bool
     {
         $format = $request->query('format');
-        if ($format === 'html') return true;
-        if ($format === 'json') return false;
+        if ($format === 'html') {
+            return true;
+        }
+        if ($format === 'json') {
+            return false;
+        }
 
         return str_contains($request->header('Accept', ''), 'text/html')
             && $request->prefers(['text/html', 'application/json']) === 'text/html';

@@ -20,7 +20,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "symfony/console": "^6.0 || ^7.0 || ^8.0",
         "symfony/process": "^6.0 || ^7.0 || ^8.0"
     },
@@ -41,7 +41,8 @@
         "pestphp/pest": "^4.4",
         "orchestra/testbench-core": "^10.9",
         "laravel/framework": "^12.54",
-        "mockery/mockery": "^1.6"
+        "mockery/mockery": "^1.6",
+        "laravel/pint": "^1.29"
     },
     "config": {
         "allow-plugins": {

@@ -8,7 +8,8 @@ use Mathiasgrimm\Netwatch\Runner;
 
 function createFakeProbe(array $results): ProbeInterface
 {
-    return new class ($results) implements ProbeInterface {
+    return new class($results) implements ProbeInterface
+    {
         private int $index = 0;
 
         public function __construct(private readonly array $results) {}
@@ -31,7 +32,7 @@ test('run returns aggregate result', function () {
         new ProbeResult(1.5, 2.5, 4.0, true),
     ]);
 
-    $result = (new Runner())->run($probe, 2);
+    $result = (new Runner)->run($probe, 2);
 
     expect($result->name)->toBe('fake-probe')
         ->and($result->iterations)->toBe(2)
@@ -45,7 +46,7 @@ test('stats with known values', function () {
         $results[] = new ProbeResult((float) $i, (float) ($i * 2), (float) ($i * 3), true);
     }
 
-    $aggregate = (new Runner())->run(createFakeProbe($results), 10);
+    $aggregate = (new Runner)->run(createFakeProbe($results), 10);
 
     expect($aggregate->stats['connect_ms']['min'])->toBe(1.0)
         ->and($aggregate->stats['connect_ms']['max'])->toBe(10.0)
@@ -65,7 +66,7 @@ test('p95 and p99 with 100 values', function () {
         $results[] = new ProbeResult((float) $i, 0, (float) $i, true);
     }
 
-    $aggregate = (new Runner())->run(createFakeProbe($results), 100);
+    $aggregate = (new Runner)->run(createFakeProbe($results), 100);
 
     expect($aggregate->stats['connect_ms']['min'])->toBe(1.0)
         ->and($aggregate->stats['connect_ms']['max'])->toBe(100.0)
@@ -80,7 +81,7 @@ test('single iteration', function () {
         new ProbeResult(5.0, 10.0, 15.0, true),
     ]);
 
-    $aggregate = (new Runner())->run($probe, 1);
+    $aggregate = (new Runner)->run($probe, 1);
     $connect = $aggregate->stats['connect_ms'];
 
     expect($connect['min'])->toBe(5.0)
@@ -98,7 +99,7 @@ test('failures are counted', function () {
         new ProbeResult(1.5, 2.5, 4.0, true),
     ]);
 
-    $aggregate = (new Runner())->run($probe, 3);
+    $aggregate = (new Runner)->run($probe, 3);
 
     expect($aggregate->failures)->toBe(1)
         ->and($aggregate->results)->toHaveCount(3);
@@ -111,7 +112,7 @@ test('stats exclude failures', function () {
         new ProbeResult(3.0, 4.0, 7.0, true),
     ]);
 
-    $aggregate = (new Runner())->run($probe, 3);
+    $aggregate = (new Runner)->run($probe, 3);
 
     expect($aggregate->stats['connect_ms']['min'])->toBe(1.0)
         ->and($aggregate->stats['connect_ms']['max'])->toBe(3.0)
@@ -124,7 +125,7 @@ test('all failures returns zero stats', function () {
         new ProbeResult(20.0, 0, 20.0, false, 'fail'),
     ]);
 
-    $aggregate = (new Runner())->run($probe, 2);
+    $aggregate = (new Runner)->run($probe, 2);
 
     expect($aggregate->failures)->toBe(2);
 
@@ -141,7 +142,7 @@ test('two iterations percentiles', function () {
         new ProbeResult(20.0, 0, 20.0, true),
     ]);
 
-    $aggregate = (new Runner())->run($probe, 2);
+    $aggregate = (new Runner)->run($probe, 2);
 
     expect($aggregate->stats['connect_ms']['min'])->toBe(10.0)
         ->and($aggregate->stats['connect_ms']['max'])->toBe(20.0)
@@ -157,7 +158,7 @@ test('early bail on consecutive failures', function () {
         new ProbeResult(4.0, 0, 4.0, true), // should never be reached
     ]);
 
-    $aggregate = (new Runner())->run($probe, 10, failThreshold: 3);
+    $aggregate = (new Runner)->run($probe, 10, failThreshold: 3);
 
     expect($aggregate->results)->toHaveCount(3)
         ->and($aggregate->failures)->toBe(3);
@@ -173,7 +174,7 @@ test('consecutive failure counter resets on success', function () {
         new ProbeResult(6.0, 1.0, 7.0, true),          // resets counter again
     ]);
 
-    $aggregate = (new Runner())->run($probe, 6, failThreshold: 3);
+    $aggregate = (new Runner)->run($probe, 6, failThreshold: 3);
 
     expect($aggregate->results)->toHaveCount(6)
         ->and($aggregate->failures)->toBe(4);
@@ -185,7 +186,7 @@ test('custom fail threshold', function () {
         new ProbeResult(2.0, 0, 2.0, true), // should never be reached
     ]);
 
-    $aggregate = (new Runner())->run($probe, 10, failThreshold: 1);
+    $aggregate = (new Runner)->run($probe, 10, failThreshold: 1);
 
     expect($aggregate->results)->toHaveCount(1)
         ->and($aggregate->failures)->toBe(1);

@@ -10,7 +10,9 @@ use Mathiasgrimm\Netwatch\Result\ProbeResult;
 class PhpRedisProbe implements ProbeInterface
 {
     private readonly string $host;
+
     private readonly int $port;
+
     private readonly string $scheme;
 
     public function __construct(
@@ -31,7 +33,7 @@ class PhpRedisProbe implements ProbeInterface
         $start = hrtime(true);
 
         try {
-            $redis = new \Redis();
+            $redis = new \Redis;
 
             $useTls = in_array($this->scheme, ['tls', 'rediss', 'tls6', 'ssl'], true);
             $host = $useTls ? "tls://{$this->host}" : $this->host;
@@ -63,7 +65,7 @@ class PhpRedisProbe implements ProbeInterface
                 requestMs: $requestMs,
                 totalMs: $connectMs + $requestMs,
                 success: $success,
-                error: $success ? null : 'Unexpected response: ' . var_export($response, true),
+                error: $success ? null : 'Unexpected response: '.var_export($response, true),
             );
         } catch (\Throwable $e) {
             $totalMs = (hrtime(true) - $start) / 1_000_000;
@@ -83,6 +85,7 @@ class PhpRedisProbe implements ProbeInterface
     public function name(): string
     {
         $scheme = in_array($this->scheme, ['tls', 'rediss', 'tls6', 'ssl'], true) ? 'rediss' : 'redis';
+
         return "{$scheme}://{$this->host}:{$this->port}";
     }
 }
