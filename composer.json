@@ -20,7 +20,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "symfony/console": "^6.0 || ^7.0 || ^8.0",
         "symfony/process": "^6.0 || ^7.0 || ^8.0"
     },
