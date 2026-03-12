@@ -13,9 +13,8 @@ Network service latency probing tool for PHP. Measures connectivity and response
 - [ ] Post results to some endpoint after `php artisan netwatch:run`
 - [ ] Detect env/cached config. Maybe boot application once and cache it with a md5(.env)
 - [ ] Maybe `Concurrency::driver(’queue’)` for async when calling `/netwatch/health`
-- [ ] Store (cleanup) metrics to view on a dashboard
+- [ ] Store & Cleanup of metrics to view on a dashboard
 - [ ] Use Inertia (3) for the dashboard with polling
-
 
 ## Features
 

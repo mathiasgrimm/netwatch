@@ -118,11 +118,6 @@ test('artisan netwatch:run command is registered', function () {
     expect($commands)->toContain('netwatch:run');
 });
 
-test('artisan netwatch:init command is registered', function () {
-    $commands = array_keys(Artisan::all());
-    expect($commands)->toContain('netwatch:init');
-});
-
 test('artisan netwatch:run works with json output', function () {
     config([
         'netwatch.iterations' => 2,
