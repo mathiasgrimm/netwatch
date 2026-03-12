@@ -433,9 +433,9 @@ class MyProbe implements ProbeInterface
 {
     public function probe(): ProbeResult
     {
-        $start = microtime(true);
+        $start = hrtime(true);
         // ... your logic ...
-        $elapsed = (microtime(true) - $start) * 1000;
+        $elapsed = (hrtime(true) - $start) / 1e6;
 
         return new ProbeResult(
             connectMs: $elapsed,
