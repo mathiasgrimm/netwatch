@@ -242,14 +242,34 @@ test('resolveProbesUsing can delegate to resolveProbe', function () {
     expect($netwatch->probeNames())->toBe(['test']);
 });
 
+test('resolveProbe handles class string with no args', function () {
+    $netwatch = Netwatch::fromArray([
+        'probes' => [
+            'test' => [
+                'enabled' => true,
+                'probe' => SuccessProbe::class,
+            ],
+        ],
+    ]);
+
+    expect($netwatch->probeNames())->toBe(['test']);
+
+    $results = $netwatch->run();
+    expect($results['test']->failures)->toBe(0);
+});
+
 test('ensureProbeContract rejects non-ProbeInterface', function () {
     new Netwatch(probes: [
         'bad' => ['probe' => 'not-a-probe'],
     ]);
 })->throws(InvalidArgumentException::class, "probe 'bad' must implement ProbeInterface");
 
-test('resolveProbe throws on invalid class', function () {
+test('resolveProbe throws on invalid array class', function () {
     Netwatch::resolveProbe('broken', ['NonExistentClass12345' => []]);
+})->throws(RuntimeException::class, "failed to instantiate probe 'broken'");
+
+test('resolveProbe throws on invalid string class', function () {
+    Netwatch::resolveProbe('broken', 'NonExistentClass12345');
 })->throws(RuntimeException::class, "failed to instantiate probe 'broken'");
 
 test('probeNames returns all names', function () {

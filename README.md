@@ -3,7 +3,6 @@
 Network service latency probing tool for PHP. Measures connectivity and response times to Redis, PostgreSQL, MySQL, S3, HTTP endpoints, and raw TCP services with statistical analysis.
 
 ## TODO
-- [ ] `php artisan optimize` not working. We probably need to pass the classname and the arguments instead
 - [ ] Include hostname/identification on the output
 
 ## Maybe
@@ -20,7 +19,7 @@ Network service latency probing tool for PHP. Measures connectivity and response
 - **Multiple probe types** — HTTP, TCP/IP, Redis (php-redis), MySQL/PostgreSQL/SQLite (PDO), AWS S3
 - **Statistical analysis** — min, max, avg, p50, p95, p99 for connect, request, and total latency
 - **Parallel execution** — probes run concurrently via subprocesses (default in CLI)
-- **Per-probe configuration** — individual iteration counts, enable/disable flags, lazy-loaded closures
+- **Per-probe configuration** — individual iteration counts, enable/disable flags, serializable probe definitions
 - **Laravel integration** — service provider with auto-discovery, Artisan command, and health dashboard
 - **Standalone CLI** — works with any PHP project via Symfony Console
 - **Fail-fast** — stops probing after 3 consecutive failures
@@ -38,7 +37,89 @@ Network service latency probing tool for PHP. Measures connectivity and response
 composer require mathiasgrimm/netwatch
 ```
 
-## Quick Start
+## Laravel Integration
+
+Netwatch auto-registers via Laravel package discovery. No manual provider registration needed.
+
+### Publish Config
+
+```bash
+php artisan vendor:publish --tag=netwatch-config
+```
+
+This creates `config/netwatch.php` with pre-configured probes that read from your existing Laravel environment variables (`DB_*`, `REDIS_*`, `AWS_*`, `APP_URL`). The config uses the serializable `[Class::class => [args]]` array format, so it is fully compatible with `php artisan config:cache`.
+
+### Artisan Command
+
+```bash
+php artisan netwatch:run
+php artisan netwatch:run --probe=redis --iterations=20 --json
+```
+
+### Health Dashboard
+
+Enable the health dashboard route by setting `NETWATCH_HEALTH_ENABLED=true` in your `.env`:
+
+```env
+NETWATCH_HEALTH_ENABLED=true
+NETWATCH_PATH=netwatch
+```
+
+Access the dashboard at `/netwatch/health`. It supports:
+
+- **HTML view** — interactive dashboard with per-probe stats and a raw JSON panel
+- **JSON view** — append `?format=json` or use `Accept: application/json`
+- **Probe filtering** — `?probes=redis,database`
+- **Compact JSON** — `?without_results=1`
+
+### Authorization
+
+By default, the health route is accessible only in `local` environments. To configure access in other environments, publish the service provider:
+
+```bash
+php artisan vendor:publish --tag=netwatch-provider
+```
+
+Then edit `app/Providers/NetwatchServiceProvider.php`:
+
+```php
+protected function gate(): void
+{
+    Gate::define('viewNetwatch', function ($user = null) {
+        return in_array(optional($user)->email, [
+            'admin@example.com',
+        ]);
+    });
+}
+```
+
+You can also use the static auth callback:
+
+```php
+Netwatch::auth(function ($request) {
+    return $request->user()?->isAdmin();
+});
+```
+
+### Environment Variables
+
+```env
+NETWATCH_ITERATIONS=10                        # Default probe iterations
+NETWATCH_HEALTH_ENABLED=false                 # Enable health dashboard route
+NETWATCH_DOMAIN=null                          # Domain for health route
+NETWATCH_PATH=netwatch                        # URL path prefix for health route
+
+NETWATCH_PROBE_DATABASE_ENABLED=false         # Enable database (PDO) probe
+NETWATCH_PROBE_REDIS_ENABLED=false            # Enable Redis probe
+NETWATCH_PROBE_S3_ENABLED=false               # Enable S3 probe
+NETWATCH_PROBE_APP_ENABLED=false              # Enable HTTP probe for APP_URL
+NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED=false   # Enable Cloudflare DNS (1.1.1.1) TCP probe
+NETWATCH_PROBE_GOOGLE_DNS_ENABLED=false       # Enable Google DNS (8.8.8.8) TCP probe
+NETWATCH_PROBE_GITHUB_COM_ENABLED=false       # Enable github.com HTTP probe
+NETWATCH_PROBE_GITHUB_ORG_ENABLED=false       # Enable github.org HTTP probe
+```
+
+## Standalone (without Laravel)
 
 ### CLI
 
@@ -96,18 +177,23 @@ return [
 
     'probes' => [
         'redis' => [
+            'enabled' => true,
             'probe' => new PhpRedisProbe('tcp://127.0.0.1:6379'),
         ],
         'mysql' => [
+            'enabled' => true,
             'probe' => new PdoProbe('mysql:host=127.0.0.1;port=3306', 'root', ''),
         ],
         'pgsql' => [
+            'enabled' => true,
             'probe' => new PdoProbe('pgsql:host=127.0.0.1;port=5432;dbname=postgres', 'postgres', ''),
         ],
         'app' => [
+            'enabled' => true,
             'probe' => new HttpProbe('https://example.com'),
         ],
         'cloudflare' => [
+            'enabled' => true,
             'probe' => new TcpPingProbe('1.1.1.1', 443),
         ],
     ],
@@ -120,19 +206,33 @@ Each probe entry supports:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `probe` | `ProbeInterface\|Closure` | required | Probe instance or closure returning one |
-| `enabled` | `bool` | `true` | Skip this probe when `false` |
+| `probe` | `ProbeInterface\|string\|array` | required | Probe instance, class string, or `[Class::class => [args]]` array |
+| `enabled` | `bool` | `false` | Probe is skipped unless explicitly set to `true` |
 | `iterations` | `int` | global default | Override iteration count for this probe |
 
 ```php
 'redis' => [
     'enabled' => true,
-    'probe' => fn () => new PhpRedisProbe('tcp://127.0.0.1:6379'),
+    'probe' => new PhpRedisProbe('tcp://127.0.0.1:6379'),
     'iterations' => 20,
 ],
 ```
 
-Closures are resolved lazily at runtime, which is useful for probes that depend on environment variables or framework config.
+The `probe` value supports three formats:
+
+- **Instance** — a `ProbeInterface` object, used as-is
+- **Class string** — e.g. `PhpRedisProbe::class`, instantiated with no arguments
+- **Array** — `[Class::class => [arg1, arg2, ...]]`, instantiated with the given arguments. This format is serializable, making it compatible with `php artisan config:cache`.
+
+```php
+// Array format (serializable)
+'database' => [
+    'enabled' => true,
+    'probe' => [
+        PdoProbe::class => ['mysql:host=127.0.0.1;port=3306', 'root', ''],
+    ],
+],
+```
 
 ## Available Probes
 
@@ -298,80 +398,6 @@ vendor/bin/netwatch netwatch:init [options]
   }
 }
 ```
-
-## Laravel Integration
-
-Netwatch auto-registers via Laravel package discovery. No manual provider registration needed.
-
-### Publish Config
-
-```bash
-php artisan vendor:publish --tag=netwatch-config
-```
-
-This creates `config/netwatch.php` with pre-configured probes that read from your existing Laravel environment variables (`DB_*`, `REDIS_*`, `AWS_*`, `APP_URL`).
-
-### Artisan Command
-
-```bash
-php artisan netwatch:run
-php artisan netwatch:run --probe=redis --iterations=20 --json
-```
-
-### Health Dashboard
-
-Enable the health dashboard route by setting `NETWATCH_HEALTH_ENABLED=true` in your `.env`:
-
-```env
-NETWATCH_HEALTH_ENABLED=true
-NETWATCH_PATH=netwatch
-```
-
-Access the dashboard at `/netwatch/health`. It supports:
-
-- **HTML view** — interactive dashboard with per-probe stats and a raw JSON panel
-- **JSON view** — append `?format=json` or use `Accept: application/json`
-- **Probe filtering** — `?probes=redis,database`
-- **Compact JSON** — `?without_results=1`
-
-### Authorization
-
-By default, the health route is accessible only in `local` environments. To configure access in other environments, publish the service provider:
-
-```bash
-php artisan vendor:publish --tag=netwatch-provider
-```
-
-Then edit `app/Providers/NetwatchServiceProvider.php`:
-
-```php
-protected function gate(): void
-{
-    Gate::define('viewNetwatch', function ($user = null) {
-        return in_array(optional($user)->email, [
-            'admin@example.com',
-        ]);
-    });
-}
-```
-
-You can also use the static auth callback:
-
-```php
-Netwatch::auth(function ($request) {
-    return $request->user()?->isAdmin();
-});
-```
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NETWATCH_ITERATIONS` | `10` | Default probe iterations |
-| `NETWATCH_HEALTH_ENABLED` | `false` | Enable health dashboard route |
-| `NETWATCH_DOMAIN` | `null` | Domain for health route |
-| `NETWATCH_PATH` | `netwatch` | URL path prefix for health route |
-| `NETWATCH_PROBE_*_ENABLED` | `false` | Enable individual probes |
 
 ## Statistical Analysis
 

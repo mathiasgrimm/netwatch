@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Mathiasgrimm\Netwatch;
 
+use InvalidArgumentException;
 use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
 use Mathiasgrimm\Netwatch\Result\AggregateResult;
 
@@ -44,13 +45,13 @@ class Netwatch
     public static function fromConfig(string $configPath): self
     {
         if (! file_exists($configPath)) {
-            throw new \InvalidArgumentException("Config file not found: {$configPath}");
+            throw new InvalidArgumentException("Config file not found: {$configPath}");
         }
 
         $config = require $configPath;
 
         if (! is_array($config) || ! isset($config['probes'])) {
-            throw new \InvalidArgumentException("Config must return an array with a 'probes' key");
+            throw new InvalidArgumentException("Config must return an array with a 'probes' key");
         }
 
         return self::fromArray($config);
@@ -83,7 +84,7 @@ class Netwatch
 
             foreach ($probeName as $name) {
                 if (! isset($this->probes[$name])) {
-                    throw new \InvalidArgumentException("Probe not found: {$name}");
+                    throw new InvalidArgumentException("Probe not found: {$name}");
                 }
             }
 
@@ -112,7 +113,7 @@ class Netwatch
         foreach ($probes as $name => $probe) {
             if (! $probe['probe'] instanceof ProbeInterface) {
                 $type = get_debug_type($probe['probe']);
-                throw new \InvalidArgumentException(
+                throw new InvalidArgumentException(
                     "Netwatch: probe '{$name}' must implement ProbeInterface, got {$type}",
                 );
             }
@@ -138,21 +139,39 @@ class Netwatch
 
     public static function resolveProbe(string $name, mixed $probe): mixed
     {
-        if (is_array($probe)) {
-            $class = array_key_first($probe);
-            $args = $probe[$class];
+        if ($probe instanceof ProbeInterface) {
+            return $probe;
+        }
 
+        if (is_string($probe)) {
             try {
-                return new $class(...$args);
+                return new $probe;
             } catch (\Throwable $e) {
                 throw new \RuntimeException(
-                    "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
+                    "Netwatch: failed to instantiate probe '{$name}' ({$probe}): {$e->getMessage()}",
                     previous: $e,
                 );
             }
         }
 
-        return $probe;
+        if (! is_array($probe)) {
+            $type = get_debug_type($probe);
+            throw new InvalidArgumentException(
+                "Netwatch: probe '{$name}' has unsupported type {$type}, expected [Class::class => [args]] array or class string",
+            );
+        }
+
+        $class = array_key_first($probe);
+        $args = $probe[$class];
+
+        try {
+            return new $class(...$args);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException(
+                "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
+                previous: $e,
+            );
+        }
     }
 
     /**
