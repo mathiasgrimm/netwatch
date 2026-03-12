@@ -6,6 +6,7 @@ Network service latency probing tool for PHP. Measures connectivity and response
 - [ ] Improve README.md (add screenshots, etc)
 - [ ] Include hostname/identification on the output
 - [ ] `/netwatch/health` not showing probe name
+- [ ] Running `php artisan netwatch:run` creates file called `host=;port=;dbname=`
 
 ## Maybe
 - [ ] `/netwatch/health?token=env(token)` (maybe POST) (or maybe a form)

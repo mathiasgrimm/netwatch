@@ -52,6 +52,7 @@
             border-bottom: 1px solid #e5e7eb;
         }
         .card-header h2 { font-size: 1.1rem; font-weight: 600; }
+        .probe-name { font-size: 0.8rem; color: #888; font-family: 'SF Mono', 'Fira Code', Menlo, Consolas, monospace; margin-top: 0.15rem; }
         .card-header .iterations { font-size: 0.8rem; color: #666; }
         .card-body { padding: 1rem 1.25rem; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -190,6 +191,7 @@
                     <div class="card-header">
                         <div>
                             <h2>{{ $name }}</h2>
+                            <div class="probe-name">{{ $result['name'] }}</div>
                             <span class="iterations">{{ $result['iterations'] }} iterations</span>
                         </div>
                         <span class="badge badge-{{ $probeStatus }}">
