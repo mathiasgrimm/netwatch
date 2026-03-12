@@ -23,6 +23,7 @@ return [
     'iterations' => 3,
     'probes' => [
         'test-probe' => [
+            'enabled' => true,
             'probe' => new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
         ],
     ],
@@ -40,9 +41,11 @@ return [
     'iterations' => 2,
     'probes' => [
         'probe-a' => [
+            'enabled' => true,
             'probe' => new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
         ],
         'probe-b' => [
+            'enabled' => true,
             'probe' => new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
         ],
     ],
