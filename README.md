@@ -2,8 +2,9 @@
 
 Network service latency probing tool for PHP. Measures connectivity and response times to Redis, PostgreSQL, MySQL, S3, HTTP endpoints, and raw TCP services with statistical analysis.
 
+> **Alpha version** — This package is under active development. The API may change at any time, including breaking changes, without prior notice. Use at your own risk.
+
 ## TODO
-- [x] Improve README.md (add screenshots, etc)
 - [ ] Include hostname/identification on the output
 - [ ] Running `php artisan netwatch:run` creates file called `host=;port=;dbname=`
 
