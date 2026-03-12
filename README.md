@@ -3,14 +3,17 @@
 Network service latency probing tool for PHP. Measures connectivity and response times to Redis, PostgreSQL, MySQL, S3, HTTP endpoints, and raw TCP services with statistical analysis.
 
 ## TODO
+- [ ] `php artisan optimize` not working. We probably need to pass the classname and the arguments instead
+- [ ] Include hostname/identification on the output
+
+## Maybe
 - [ ] `/netwatch/health?token=env(token)` (maybe POST) (or maybe a form)
 - [ ] Post results to some endpoint after `php artisan netwatch:run`
-- [ ] `php artisan optimize` not working. We probably need to pass the classname and the arguments instead
 - [ ] Detect env/cached config. Maybe boot application once and cache it with a md5(.env)
-- [ ] Maybe Concurrency::driver(’queue’) for async when calling `/netwatch/health`
+- [ ] Maybe `Concurrency::driver(’queue’)` for async when calling `/netwatch/health`
 - [ ] Store (cleanup) metrics to view on a dashboard
 - [ ] Use Inertia (3) for the dashboard with polling
-- [ ] Include hostname/identification on the output
+
 
 ## Features
 
@@ -24,7 +27,7 @@ Network service latency probing tool for PHP. Measures connectivity and response
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - `ext-curl` (for HTTP and S3 probes)
 - `ext-redis` (for Redis probe, optional)
 - `ext-pdo` (for database probes, optional)
