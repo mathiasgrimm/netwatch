@@ -7,6 +7,7 @@ namespace Mathiasgrimm\Netwatch\Probe;
 use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
 use Mathiasgrimm\Netwatch\Result\ProbeResult;
 use PDO;
+use Throwable;
 
 class PdoProbe implements ProbeInterface
 {
@@ -41,7 +42,7 @@ class PdoProbe implements ProbeInterface
                 totalMs: $connectMs + $requestMs,
                 success: true,
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $elapsed = (hrtime(true) - $start) / 1_000_000;
 
             return new ProbeResult(

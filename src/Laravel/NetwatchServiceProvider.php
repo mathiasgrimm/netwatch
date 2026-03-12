@@ -10,6 +10,7 @@ use Mathiasgrimm\Netwatch\Console\InitCommand;
 use Mathiasgrimm\Netwatch\Laravel\Console\NetwatchCommand;
 use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
 use Mathiasgrimm\Netwatch\Netwatch;
+use RuntimeException;
 use Throwable;
 
 class NetwatchServiceProvider extends ServiceProvider
@@ -23,7 +24,7 @@ class NetwatchServiceProvider extends ServiceProvider
                 try {
                     return $this->app->make($probe);
                 } catch (Throwable $e) {
-                    throw new \RuntimeException(
+                    throw new RuntimeException(
                         "Netwatch: failed to resolve probe '{$name}' ({$probe}) from container: {$e->getMessage()}",
                         previous: $e,
                     );

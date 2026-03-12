@@ -13,6 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
+use Throwable;
 
 class NetwatchCommand extends Command
 {
@@ -47,7 +48,7 @@ class NetwatchCommand extends Command
         try {
             $netwatch = $this->resolveNetwatch($configPath);
             $results = $netwatch->run($probeName, $iterations);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $output->writeln("<error>{$e->getMessage()}</error>");
 
             return Command::FAILURE;
@@ -83,7 +84,7 @@ class NetwatchCommand extends Command
         try {
             $netwatch = Netwatch::fromConfig($configPath);
             $probeNames = $netwatch->probeNames();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $output->writeln("<error>{$e->getMessage()}</error>");
 
             return Command::FAILURE;

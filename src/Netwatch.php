@@ -4,29 +4,32 @@ declare(strict_types=1);
 
 namespace Mathiasgrimm\Netwatch;
 
+use Closure;
 use InvalidArgumentException;
 use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
 use Mathiasgrimm\Netwatch\Result\AggregateResult;
+use RuntimeException;
+use Throwable;
 
 class Netwatch
 {
     private Runner $runner;
 
-    private static ?\Closure $authUsing = null;
+    private static ?Closure $authUsing = null;
 
-    private static ?\Closure $resolveProbesUsing = null;
+    private static ?Closure $resolveProbesUsing = null;
 
-    public static function auth(\Closure $callback): void
+    public static function auth(Closure $callback): void
     {
         static::$authUsing = $callback;
     }
 
-    public static function authUsing(): ?\Closure
+    public static function authUsing(): ?Closure
     {
         return static::$authUsing;
     }
 
-    public static function resolveProbesUsing(?\Closure $callback): void
+    public static function resolveProbesUsing(?Closure $callback): void
     {
         static::$resolveProbesUsing = $callback;
     }
@@ -146,8 +149,8 @@ class Netwatch
         if (is_string($probe)) {
             try {
                 return new $probe;
-            } catch (\Throwable $e) {
-                throw new \RuntimeException(
+            } catch (Throwable $e) {
+                throw new RuntimeException(
                     "Netwatch: failed to instantiate probe '{$name}' ({$probe}): {$e->getMessage()}",
                     previous: $e,
                 );
@@ -166,8 +169,8 @@ class Netwatch
 
         try {
             return new $class(...$args);
-        } catch (\Throwable $e) {
-            throw new \RuntimeException(
+        } catch (Throwable $e) {
+            throw new RuntimeException(
                 "Netwatch: failed to instantiate probe '{$name}' ({$class}): {$e->getMessage()}",
                 previous: $e,
             );
