@@ -146,7 +146,15 @@ return [
 ```bash
 php artisan netwatch:run
 php artisan netwatch:run --probe=redis --iterations=20 --json
+php artisan netwatch:run --json --without-results
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--iterations=N` | Override iteration count for all probes |
+| `--probe=NAME` | Run only a specific probe by name (e.g. `--probe=redis`) |
+| `--json` | Output results as JSON instead of a table |
+| `--without-results` | Exclude individual iteration results from JSON output |
 
 ![CLI Table Output](docs/cli.jpg)
 
@@ -159,12 +167,17 @@ NETWATCH_HEALTH_ENABLED=true
 NETWATCH_PATH=netwatch
 ```
 
-Access the dashboard at `/netwatch/health`. It supports:
+Access the dashboard at `/netwatch/health`.
 
-- **HTML view** — interactive dashboard with per-probe stats and a raw JSON panel
-- **JSON view** — append `?format=json` or use `Accept: application/json`
-- **Probe filtering** — `?probes=redis,database`
-- **Compact JSON** — `?without_results=1`
+#### Query Parameters
+
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `format` | `?format=json` | Force response format: `json` or `html`. Without this parameter, the format is determined by the `Accept` header (defaults to HTML for browsers). |
+| `probes` | `?probes=redis,database` | Comma-separated list of probe names to run. Only the specified probes are executed; others are skipped. |
+| `without_results` | `?without_results=1` | Exclude individual iteration results from the response, returning only aggregate stats. Useful for smaller payloads. |
+
+Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&without_results=1`
 
 **HTML view** — interactive dashboard with per-probe latency stats:
 
@@ -468,7 +481,6 @@ vendor/bin/netwatch netwatch:init [options]
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--laravel` | `-l` | Generate Laravel-aware config (auto-detected) |
 | `--force` | `-f` | Overwrite existing `netwatch.php` |
 
 ## Output
