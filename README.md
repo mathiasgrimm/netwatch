@@ -3,7 +3,7 @@
 Network service latency probing tool for PHP. Measures connectivity and response times to Redis, PostgreSQL, MySQL, S3, HTTP endpoints, and raw TCP services with statistical analysis.
 
 ## TODO
-- [ ] Improve README.md (add screenshots, etc)
+- [x] Improve README.md (add screenshots, etc)
 - [ ] Include hostname/identification on the output
 - [ ] Running `php artisan netwatch:run` creates file called `host=;port=;dbname=`
 
@@ -147,6 +147,8 @@ php artisan netwatch:run
 php artisan netwatch:run --probe=redis --iterations=20 --json
 ```
 
+![CLI Table Output](docs/cli.jpg)
+
 ### Health Dashboard
 
 Enable the health dashboard route by setting `NETWATCH_HEALTH_ENABLED=true` in your `.env`:
@@ -162,6 +164,18 @@ Access the dashboard at `/netwatch/health`. It supports:
 - **JSON view** — append `?format=json` or use `Accept: application/json`
 - **Probe filtering** — `?probes=redis,database`
 - **Compact JSON** — `?without_results=1`
+
+**HTML view** — interactive dashboard with per-probe latency stats:
+
+![Health Dashboard](docs/dashboard.jpg)
+
+**JSON panel** — view raw JSON data directly within the dashboard:
+
+![Health Dashboard - JSON Panel](docs/dashboard-json.jpg)
+
+**JSON API response** — append `?format=json` for a raw JSON endpoint:
+
+![Health Dashboard - JSON API Response](docs/dashboard-json-format.jpg)
 
 ### Authorization
 
@@ -487,6 +501,8 @@ vendor/bin/netwatch netwatch:init [options]
   }
 }
 ```
+
+![CLI JSON Output](docs/cli-json.jpg)
 
 ## Statistical Analysis
 
