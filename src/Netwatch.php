@@ -24,24 +24,24 @@ class Netwatch
     }
 
     /**
-     * @param array<string, array{probe: ProbeInterface, iterations?: int}> $probes
+     * @param  array<string, array{probe: ProbeInterface, iterations?: int}>  $probes
      */
     public function __construct(
         private readonly array $probes,
         private readonly int $defaultIterations = 10,
     ) {
-        $this->runner = new Runner();
+        $this->runner = new Runner;
     }
 
     public static function fromConfig(string $configPath): self
     {
-        if (!file_exists($configPath)) {
+        if (! file_exists($configPath)) {
             throw new \InvalidArgumentException("Config file not found: {$configPath}");
         }
 
         $config = require $configPath;
 
-        if (!is_array($config) || !isset($config['probes'])) {
+        if (! is_array($config) || ! isset($config['probes'])) {
             throw new \InvalidArgumentException("Config must return an array with a 'probes' key");
         }
 
@@ -64,8 +64,8 @@ class Netwatch
     }
 
     /**
-     * @param string|array<string>|null $probeName Run only this probe or probes (null = all)
-     * @param int|null $iterations Override iterations for all probes
+     * @param  string|array<string>|null  $probeName  Run only this probe or probes (null = all)
+     * @param  int|null  $iterations  Override iterations for all probes
      * @return array<string, AggregateResult>
      */
     public function run(string|array|null $probeName = null, ?int $iterations = null): array
@@ -73,14 +73,14 @@ class Netwatch
         $probes = $this->probes;
 
         if (is_string($probeName)) {
-            if (!isset($probes[$probeName])) {
+            if (! isset($probes[$probeName])) {
                 throw new \InvalidArgumentException("Probe not found: {$probeName}");
             }
             $probes = [$probeName => $probes[$probeName]];
         } elseif (is_array($probeName)) {
             $filtered = [];
             foreach ($probeName as $name) {
-                if (!isset($probes[$name])) {
+                if (! isset($probes[$name])) {
                     throw new \InvalidArgumentException("Probe not found: {$name}");
                 }
                 $filtered[$name] = $probes[$name];

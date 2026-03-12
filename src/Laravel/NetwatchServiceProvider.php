@@ -15,7 +15,7 @@ class NetwatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/config/netwatch.php', 'netwatch');
+        $this->mergeConfigFrom(__DIR__.'/config/netwatch.php', 'netwatch');
 
         $this->app->singleton(Netwatch::class, function () {
             $config = config('netwatch');
@@ -41,7 +41,7 @@ class NetwatchServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'netwatch');
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'netwatch');
 
         $this->registerRoutes();
         $this->registerPublishing();
@@ -56,7 +56,7 @@ class NetwatchServiceProvider extends ServiceProvider
 
     private function registerRoutes(): void
     {
-        if (!config('netwatch.health_route.enabled', false)) {
+        if (! config('netwatch.health_route.enabled', false)) {
             return;
         }
 
@@ -65,26 +65,26 @@ class NetwatchServiceProvider extends ServiceProvider
             'prefix' => config('netwatch.health_route.path', 'netwatch'),
             'middleware' => config('netwatch.health_route.middleware', ['web', Authorize::class]),
         ], function () {
-            $this->loadRoutesFrom(__DIR__ . '/routes/web.php');
+            $this->loadRoutesFrom(__DIR__.'/routes/web.php');
         });
     }
 
     private function registerPublishing(): void
     {
-        if (!$this->app->runningInConsole()) {
+        if (! $this->app->runningInConsole()) {
             return;
         }
 
         $this->publishes([
-            __DIR__ . '/config/netwatch.php' => config_path('netwatch.php'),
+            __DIR__.'/config/netwatch.php' => config_path('netwatch.php'),
         ], 'netwatch-config');
 
         $this->publishes([
-            __DIR__ . '/resources/views' => resource_path('views/vendor/netwatch'),
+            __DIR__.'/resources/views' => resource_path('views/vendor/netwatch'),
         ], 'netwatch-views');
 
         $this->publishes([
-            __DIR__ . '/../../stubs/NetwatchServiceProvider.stub' => app_path('Providers/NetwatchServiceProvider.php'),
+            __DIR__.'/../../stubs/NetwatchServiceProvider.stub' => app_path('Providers/NetwatchServiceProvider.php'),
         ], 'netwatch-provider');
     }
 }

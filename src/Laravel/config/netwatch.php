@@ -1,5 +1,6 @@
 <?php
 
+use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
 use Mathiasgrimm\Netwatch\Probe\HttpProbe;
 use Mathiasgrimm\Netwatch\Probe\PdoProbe;
 use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
@@ -32,7 +33,7 @@ return [
         'enabled' => (bool) env('NETWATCH_HEALTH_ENABLED', false),
         'domain' => env('NETWATCH_DOMAIN'),
         'path' => env('NETWATCH_PATH', 'netwatch'),
-        'middleware' => ['web', \Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize::class],
+        'middleware' => ['web', Authorize::class],
     ],
 
     /*
@@ -50,7 +51,7 @@ return [
         'database' => [
             'enabled' => env('NETWATCH_PROBE_DATABASE_ENABLED', false),
             'probe' => fn () => new PdoProbe(
-                env('DB_CONNECTION') . ':host=' . env('DB_HOST') . ';port=' . env('DB_PORT') . ';dbname=' . env('DB_DATABASE'),
+                env('DB_CONNECTION').':host='.env('DB_HOST').';port='.env('DB_PORT').';dbname='.env('DB_DATABASE'),
                 env('DB_USERNAME'),
                 env('DB_PASSWORD'),
             ),
@@ -59,7 +60,7 @@ return [
         'redis' => [
             'enabled' => env('NETWATCH_PROBE_REDIS_ENABLED', false),
             'probe' => fn () => new PhpRedisProbe(
-                address: env('REDIS_HOST') . ':' . env('REDIS_PORT'),
+                address: env('REDIS_HOST').':'.env('REDIS_PORT'),
                 username: env('REDIS_USERNAME'),
                 password: env('REDIS_PASSWORD'),
             ),

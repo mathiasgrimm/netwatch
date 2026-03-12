@@ -8,14 +8,15 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 function createRunCommandTester(): CommandTester
 {
-    $app = new Application();
-    $app->add(new NetwatchCommand());
+    $app = new Application;
+    $app->add(new NetwatchCommand);
+
     return new CommandTester($app->find('netwatch:run'));
 }
 
 function writeRunConfig(string $dir, ?string $content = null): string
 {
-    $path = $dir . '/netwatch.php';
+    $path = $dir.'/netwatch.php';
     file_put_contents($path, $content ?? <<<'PHP'
 <?php
 return [
@@ -27,6 +28,7 @@ return [
     ],
 ];
 PHP);
+
     return $path;
 }
 
@@ -49,12 +51,12 @@ PHP);
 }
 
 beforeEach(function () {
-    $this->configDir = sys_get_temp_dir() . '/netwatch_cmd_test_' . uniqid();
+    $this->configDir = sys_get_temp_dir().'/netwatch_cmd_test_'.uniqid();
     mkdir($this->configDir);
 });
 
 afterEach(function () {
-    array_map('unlink', glob($this->configDir . '/*'));
+    array_map('unlink', glob($this->configDir.'/*'));
     rmdir($this->configDir);
 });
 

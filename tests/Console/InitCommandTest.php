@@ -8,25 +8,26 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 function createInitCommandTester(): CommandTester
 {
-    $app = new Application();
-    $app->add(new InitCommand());
+    $app = new Application;
+    $app->add(new InitCommand);
+
     return new CommandTester($app->find('netwatch:init'));
 }
 
 beforeEach(function () {
     $this->originalCwd = getcwd();
-    $this->tempDir = sys_get_temp_dir() . '/netwatch_init_test_' . uniqid();
+    $this->tempDir = sys_get_temp_dir().'/netwatch_init_test_'.uniqid();
     mkdir($this->tempDir);
     chdir($this->tempDir);
 });
 
 afterEach(function () {
     chdir($this->originalCwd);
-    array_map('unlink', glob($this->tempDir . '/*'));
+    array_map('unlink', glob($this->tempDir.'/*'));
 
-    if (is_dir($this->tempDir . '/bootstrap')) {
-        array_map('unlink', glob($this->tempDir . '/bootstrap/*'));
-        rmdir($this->tempDir . '/bootstrap');
+    if (is_dir($this->tempDir.'/bootstrap')) {
+        array_map('unlink', glob($this->tempDir.'/bootstrap/*'));
+        rmdir($this->tempDir.'/bootstrap');
     }
 
     rmdir($this->tempDir);
@@ -36,7 +37,7 @@ test('generates standalone config', function () {
     $tester = createInitCommandTester();
     $tester->execute([]);
 
-    $content = file_get_contents($this->tempDir . '/netwatch.php');
+    $content = file_get_contents($this->tempDir.'/netwatch.php');
 
     expect($tester->getStatusCode())->toBe(0)
         ->and($tester->getDisplay())->toContain('standalone')
@@ -50,7 +51,7 @@ test('generates laravel config with flag', function () {
     $tester = createInitCommandTester();
     $tester->execute(['--laravel' => true]);
 
-    $content = file_get_contents($this->tempDir . '/netwatch.php');
+    $content = file_get_contents($this->tempDir.'/netwatch.php');
 
     expect($tester->getStatusCode())->toBe(0)
         ->and($tester->getDisplay())->toContain('Laravel')
@@ -61,37 +62,37 @@ test('generates laravel config with flag', function () {
 });
 
 test('auto-detects laravel', function () {
-    mkdir($this->tempDir . '/bootstrap');
-    file_put_contents($this->tempDir . '/bootstrap/app.php', '<?php');
-    file_put_contents($this->tempDir . '/artisan', '<?php');
+    mkdir($this->tempDir.'/bootstrap');
+    file_put_contents($this->tempDir.'/bootstrap/app.php', '<?php');
+    file_put_contents($this->tempDir.'/artisan', '<?php');
 
     $tester = createInitCommandTester();
     $tester->execute([]);
 
-    $content = file_get_contents($this->tempDir . '/netwatch.php');
+    $content = file_get_contents($this->tempDir.'/netwatch.php');
 
     expect($tester->getDisplay())->toContain('Laravel')
         ->and($content)->toContain('bootstrap/app.php');
 });
 
 test('refuses to overwrite existing file', function () {
-    file_put_contents($this->tempDir . '/netwatch.php', '<?php // existing');
+    file_put_contents($this->tempDir.'/netwatch.php', '<?php // existing');
 
     $tester = createInitCommandTester();
     $tester->execute([]);
 
     expect($tester->getStatusCode())->toBe(1)
         ->and($tester->getDisplay())->toContain('already exists')
-        ->and(file_get_contents($this->tempDir . '/netwatch.php'))->toBe('<?php // existing');
+        ->and(file_get_contents($this->tempDir.'/netwatch.php'))->toBe('<?php // existing');
 });
 
 test('force overwrites existing file', function () {
-    file_put_contents($this->tempDir . '/netwatch.php', '<?php // existing');
+    file_put_contents($this->tempDir.'/netwatch.php', '<?php // existing');
 
     $tester = createInitCommandTester();
     $tester->execute(['--force' => true]);
 
-    $content = file_get_contents($this->tempDir . '/netwatch.php');
+    $content = file_get_contents($this->tempDir.'/netwatch.php');
 
     expect($tester->getStatusCode())->toBe(0)
         ->and($content)->toContain('TcpPingProbe');
@@ -100,7 +101,7 @@ test('force overwrites existing file', function () {
 test('standalone config is valid php', function () {
     createInitCommandTester()->execute([]);
 
-    $output = shell_exec('php -l ' . escapeshellarg($this->tempDir . '/netwatch.php') . ' 2>&1');
+    $output = shell_exec('php -l '.escapeshellarg($this->tempDir.'/netwatch.php').' 2>&1');
 
     expect($output)->toContain('No syntax errors');
 });
@@ -108,7 +109,7 @@ test('standalone config is valid php', function () {
 test('laravel config is valid php', function () {
     createInitCommandTester()->execute(['--laravel' => true]);
 
-    $output = shell_exec('php -l ' . escapeshellarg($this->tempDir . '/netwatch.php') . ' 2>&1');
+    $output = shell_exec('php -l '.escapeshellarg($this->tempDir.'/netwatch.php').' 2>&1');
 
     expect($output)->toContain('No syntax errors');
 });
