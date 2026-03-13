@@ -35,6 +35,22 @@ test('probe fails on unreachable host', function () {
         ->and($result->error)->toContain('curl error');
 });
 
+test('probe succeeds when expectedCode matches actual response code', function () {
+    $probe = new HttpProbe('https://httpbin.org/status/421', expectedCode: 421);
+    $result = $probe->probe();
+
+    expect($result->success)->toBeTrue()
+        ->and($result->error)->toBeNull();
+});
+
+test('probe fails when expectedCode does not match actual response code', function () {
+    $probe = new HttpProbe('https://httpbin.org/status/421', expectedCode: 200);
+    $result = $probe->probe();
+
+    expect($result->success)->toBeFalse()
+        ->and($result->error)->toBe('HTTP 421');
+});
+
 test('connect and request times are separated', function () {
     $probe = new HttpProbe('https://httpbin.org/status/200');
     $result = $probe->probe();
