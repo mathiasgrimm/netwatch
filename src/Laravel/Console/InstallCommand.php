@@ -16,38 +16,44 @@ class InstallCommand extends Command
 
     public function handle(): int
     {
-        $this->components->info('Publishing Netwatch config...');
-        $this->callSilent('vendor:publish', [
-            '--tag' => 'netwatch-config',
-            '--force' => $this->option('force'),
-        ]);
+        $this->components->info('Installing Netwatch resources.');
 
-        $this->components->info('Publishing Netwatch service provider...');
-        $this->callSilent('vendor:publish', [
-            '--tag' => 'netwatch-provider',
-            '--force' => $this->option('force'),
-        ]);
+        collect([
+            'Service Provider' => fn () => $this->callSilent('vendor:publish', ['--tag' => 'netwatch-provider', '--force' => $this->option('force')]) == 0,
+            'Configuration' => fn () => $this->callSilent('vendor:publish', ['--tag' => 'netwatch-config', '--force' => $this->option('force')]) == 0,
+        ])->each(fn ($task, $description) => $this->components->task($description, $task));
 
-        $namespace = Str::replaceLast('\\', '', $this->laravel->getNamespace());
+        $this->registerNetwatchServiceProvider();
 
-        if ($namespace !== 'App') {
-            $providerPath = app_path('Providers/NetwatchServiceProvider.php');
-
-            if (file_exists($providerPath)) {
-                file_put_contents(
-                    $providerPath,
-                    str_replace('App\Providers', $namespace.'\Providers', file_get_contents($providerPath)),
-                );
-            }
-        }
-
-        if (method_exists(ServiceProvider::class, 'addProviderToBootstrapFile')) {
-            ServiceProvider::addProviderToBootstrapFile($namespace.'\Providers\NetwatchServiceProvider');
-            $this->components->info('Service provider registered in bootstrap/providers.php.');
-        }
-
-        $this->components->info('Netwatch installed successfully.');
+        $this->components->info('Netwatch scaffolding installed successfully.');
 
         return self::SUCCESS;
+    }
+
+    protected function registerNetwatchServiceProvider(): void
+    {
+        $namespace = Str::replaceLast('\\', '', $this->laravel->getNamespace());
+
+        if (file_exists($this->laravel->bootstrapPath('providers.php'))) {
+            ServiceProvider::addProviderToBootstrapFile("{$namespace}\\Providers\\NetwatchServiceProvider");
+        } else {
+            $appConfig = file_get_contents(config_path('app.php'));
+
+            if (Str::contains($appConfig, $namespace.'\\Providers\\NetwatchServiceProvider::class')) {
+                return;
+            }
+
+            file_put_contents(config_path('app.php'), str_replace(
+                "{$namespace}\\Providers\EventServiceProvider::class,".PHP_EOL,
+                "{$namespace}\\Providers\EventServiceProvider::class,".PHP_EOL."        {$namespace}\Providers\NetwatchServiceProvider::class,".PHP_EOL,
+                $appConfig
+            ));
+        }
+
+        file_put_contents(app_path('Providers/NetwatchServiceProvider.php'), str_replace(
+            "namespace App\Providers;",
+            "namespace {$namespace}\Providers;",
+            file_get_contents(app_path('Providers/NetwatchServiceProvider.php'))
+        ));
     }
 }
