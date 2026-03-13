@@ -34,6 +34,7 @@ return [
         'domain' => env('NETWATCH_DOMAIN'),
         'path' => env('NETWATCH_PATH', 'netwatch'),
         'middleware' => ['web', Authorize::class],
+        'token' => env('NETWATCH_HEALTH_TOKEN'),
     ],
 
     /*
