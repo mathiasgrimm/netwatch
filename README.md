@@ -43,13 +43,28 @@ composer require mathiasgrimm/netwatch
 
 Netwatch auto-registers via Laravel package discovery. No manual provider registration needed.
 
-### Publish Config
+### Install
+
+```bash
+php artisan netwatch:install
+```
+
+This publishes the config file and service provider, and registers the provider in `bootstrap/providers.php`.
+
+To overwrite previously published files:
+
+```bash
+php artisan netwatch:install --force
+```
+
+You can also publish assets individually:
 
 ```bash
 php artisan vendor:publish --tag=netwatch-config
+php artisan vendor:publish --tag=netwatch-provider
 ```
 
-This creates `config/netwatch.php` with pre-configured probes that read from your existing Laravel environment variables (`DB_*`, `REDIS_*`, `AWS_*`, `APP_URL`). The config uses the serializable `[Class::class => [args]]` array format, so it is fully compatible with `php artisan config:cache`.
+The config file (`config/netwatch.php`) contains pre-configured probes that read from your existing Laravel environment variables (`DB_*`, `REDIS_*`, `AWS_*`, `APP_URL`). The config uses the serializable `[Class::class => [args]]` array format, so it is fully compatible with `php artisan config:cache`.
 
 ```php
 <?php
