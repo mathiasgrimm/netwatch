@@ -71,6 +71,16 @@ test('probe fails when expectedCode does not match actual response code', functi
         ->and($result->error)->toBe('HTTP 421');
 });
 
+test('openai api returns 421 and is considered successful with expectedCode', function () {
+    $factory = createHttpFactory('https://api.openai.com', 421);
+
+    $probe = new HttpProbe('https://api.openai.com', expectedCode: 421, httpClientFactory: $factory);
+    $result = $probe->probe();
+
+    expect($result->success)->toBeTrue()
+        ->and($result->error)->toBeNull();
+});
+
 test('connect and request times are separated', function () {
     $factory = createHttpFactory('https://example.com', 200);
 
