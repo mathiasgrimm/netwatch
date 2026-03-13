@@ -29,7 +29,7 @@ Network service latency probing tool for PHP. Measures connectivity and response
 ## Requirements
 
 - PHP 8.3+
-- `ext-curl` (for HTTP and S3 probes)
+- `ext-curl` (for S3 probe)
 - `ext-redis` (for Redis probe, optional)
 - `ext-pdo` (for database probes, optional)
 
