@@ -6,6 +6,7 @@ namespace Mathiasgrimm\Netwatch\Laravel\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class InstallCommand extends Command
 {
@@ -27,22 +28,21 @@ class InstallCommand extends Command
             '--force' => $this->option('force'),
         ]);
 
-        $namespace = $this->laravel->getNamespace();
+        $namespace = Str::replaceLast('\\', '', $this->laravel->getNamespace());
 
-        if ($namespace !== 'App\\') {
+        if ($namespace !== 'App') {
             $providerPath = app_path('Providers/NetwatchServiceProvider.php');
 
             if (file_exists($providerPath)) {
                 file_put_contents(
                     $providerPath,
-                    str_replace('App\\Providers', rtrim($namespace, '\\').'\\Providers', file_get_contents($providerPath)),
+                    str_replace('App\Providers', $namespace.'\Providers', file_get_contents($providerPath)),
                 );
             }
         }
 
         if (method_exists(ServiceProvider::class, 'addProviderToBootstrapFile')) {
-            $appNamespace = rtrim($namespace, '\\');
-            ServiceProvider::addProviderToBootstrapFile("{$appNamespace}\\Providers\\NetwatchServiceProvider");
+            ServiceProvider::addProviderToBootstrapFile($namespace.'\Providers\NetwatchServiceProvider');
             $this->components->info('Service provider registered in bootstrap/providers.php.');
         }
 
