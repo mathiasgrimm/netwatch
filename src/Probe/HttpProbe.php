@@ -4,58 +4,56 @@ declare(strict_types=1);
 
 namespace Mathiasgrimm\Netwatch\Probe;
 
+use GuzzleHttp\TransferStats;
+use Illuminate\Http\Client\Factory;
+use Illuminate\Http\Client\RequestException;
 use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
 use Mathiasgrimm\Netwatch\Result\ProbeResult;
 
 class HttpProbe implements ProbeInterface
 {
+    private readonly Factory $httpClientFactory;
+
     public function __construct(
         private readonly string $url,
         private readonly string $method = 'GET',
         private readonly array $headers = [],
         private readonly float $timeout = 3.0,
         private readonly ?int $expectedCode = null,
-    ) {}
+        ?Factory $httpClientFactory = null,
+    ) {
+        $this->httpClientFactory = $httpClientFactory ?? new Factory;
+    }
 
     public function probe(): ProbeResult
     {
-        $ch = curl_init();
+        $connectMs = 0.0;
+        $totalMs = 0.0;
 
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $this->url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT_MS => (int) ($this->timeout * 1000),
-            CURLOPT_CONNECTTIMEOUT_MS => (int) ($this->timeout * 1000),
-            CURLOPT_CUSTOMREQUEST => $this->method,
-            CURLOPT_NOBODY => $this->method === 'HEAD',
-            CURLOPT_HTTPHEADER => $this->headers,
-            CURLOPT_FRESH_CONNECT => true,
-            CURLOPT_FORBID_REUSE => true,
-        ]);
+        try {
+            $response = $this->httpClientFactory
+                ->timeout((int) $this->timeout)
+                ->withHeaders($this->headers)
+                ->withOptions(['on_stats' => function (TransferStats $stats) use (&$connectMs, &$totalMs) {
+                    $handlerStats = $stats->getHandlerStats();
+                    $connectMs = ($handlerStats['connect_time'] ?? 0) * 1000;
+                    $totalMs = ($stats->getTransferTime() ?? 0) * 1000;
+                }])
+                ->send($this->method, $this->url)
+                ->throw();
 
-        curl_exec($ch);
-        $errno = curl_errno($ch);
-
-        if ($errno !== 0) {
-            $error = curl_error($ch);
-            $connectMs = curl_getinfo($ch, CURLINFO_CONNECT_TIME) * 1000;
-            $totalMs = curl_getinfo($ch, CURLINFO_TOTAL_TIME) * 1000;
-            curl_close($ch);
-
+            $httpCode = $response->status();
+        } catch (RequestException $e) {
+            $httpCode = $e->response->status();
+        } catch (\Exception $e) {
             return new ProbeResult(
                 connectMs: $connectMs,
                 requestMs: max(0, $totalMs - $connectMs),
                 totalMs: $totalMs,
                 success: false,
-                error: "curl error [$errno]: $error",
+                error: $e->getMessage(),
             );
         }
-
-        $connectMs = curl_getinfo($ch, CURLINFO_CONNECT_TIME) * 1000;
-        $totalMs = curl_getinfo($ch, CURLINFO_TOTAL_TIME) * 1000;
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         $requestMs = max(0, $totalMs - $connectMs);
         $success = $this->expectedCode !== null
