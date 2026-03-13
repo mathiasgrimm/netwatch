@@ -14,6 +14,7 @@ class HttpProbe implements ProbeInterface
         private readonly string $method = 'GET',
         private readonly array $headers = [],
         private readonly float $timeout = 3.0,
+        private readonly ?int $expectedCode = null,
     ) {}
 
     public function probe(): ProbeResult
@@ -57,7 +58,9 @@ class HttpProbe implements ProbeInterface
         curl_close($ch);
 
         $requestMs = max(0, $totalMs - $connectMs);
-        $success = $httpCode >= 200 && $httpCode < 400;
+        $success = $this->expectedCode !== null
+            ? $httpCode === $this->expectedCode
+            : $httpCode >= 200 && $httpCode < 400;
 
         return new ProbeResult(
             connectMs: $connectMs,

@@ -363,6 +363,7 @@ new HttpProbe(
     method: 'GET',          // HTTP method (default: GET)
     headers: [],            // Custom headers
     timeout: 3.0,           // Timeout in seconds
+    expectedCode: null,     // Expected HTTP status code (null = 200-399)
 )
 ```
 
