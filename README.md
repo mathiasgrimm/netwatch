@@ -9,7 +9,6 @@ Network service latency probing tool for PHP. Measures connectivity and response
 - [ ] Running `php artisan netwatch:run` creates file called `host=;port=;dbname=`
 
 ## Maybe
-- [ ] `/netwatch/health?token=env(token)` (maybe POST) (or maybe a form)
 - [ ] Post results to some endpoint after `php artisan netwatch:run`
 - [ ] Detect env/cached config. Maybe boot application once and cache it with a md5(.env)
 - [ ] Maybe `Concurrency::driver(’queue’)` for async when calling `/netwatch/health`
@@ -84,6 +83,7 @@ return [
         'domain' => env('NETWATCH_DOMAIN'),
         'path' => env('NETWATCH_PATH', 'netwatch'),
         'middleware' => ['web', Authorize::class],
+        'token' => env('NETWATCH_HEALTH_TOKEN'),
     ],
 
     'probes' => [
@@ -208,6 +208,18 @@ Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&
 
 ### Authorization
 
+#### Token-based auth (for monitoring tools)
+
+Monitoring tools (Datadog, uptime checkers, etc.) that can't use session-based auth can authenticate with a query-parameter token:
+
+```env
+NETWATCH_HEALTH_TOKEN=your-secret-token
+```
+
+Then access the endpoint as `/netwatch/health?token=your-secret-token`. When a valid token is provided, session/gate-based auth is bypassed. If the token is not set, regular auth applies unchanged.
+
+#### Gate-based auth
+
 By default, the health route is accessible only in `local` environments. To configure access in other environments, publish the service provider:
 
 ```bash
@@ -242,6 +254,7 @@ NETWATCH_ITERATIONS=10                        # Default probe iterations
 NETWATCH_HEALTH_ENABLED=false                 # Enable health dashboard route
 NETWATCH_DOMAIN=null                          # Domain for health route
 NETWATCH_PATH=netwatch                        # URL path prefix for health route
+NETWATCH_HEALTH_TOKEN=null                       # Token for monitoring-tool access (null = disabled)
 
 NETWATCH_PROBE_DATABASE_ENABLED=false         # Enable database (PDO) probe
 NETWATCH_PROBE_REDIS_ENABLED=false            # Enable Redis probe
