@@ -6,6 +6,7 @@ namespace Mathiasgrimm\Netwatch\Laravel;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Mathiasgrimm\Netwatch\Laravel\Console\InstallCommand;
 use Mathiasgrimm\Netwatch\Laravel\Console\NetwatchCommand;
 use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
 use Mathiasgrimm\Netwatch\Netwatch;
@@ -47,6 +48,7 @@ class NetwatchServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                InstallCommand::class,
                 NetwatchCommand::class,
             ]);
         }
