@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/mathiasgrimm/netwatch/main/art/banner.png" alt="Netwatch" width="100%">
+    <img src="https://raw.githubusercontent.com/mathiasgrimm/netwatch/main/art/banner.avif" alt="Netwatch" width="100%">
 </p>
 
 # Netwatch
