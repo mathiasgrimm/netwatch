@@ -203,11 +203,11 @@ Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&
 
 **HTML view** — interactive dashboard with per-probe latency stats:
 
-![Health Dashboard](docs/dashboard.jpg)
+![Health Dashboard](docs/dashboard.avif)
 
 **JSON panel** — view raw JSON data directly within the dashboard:
 
-![Health Dashboard - JSON Panel](docs/dashboard-json.jpg)
+![Health Dashboard - JSON Panel](docs/dashboard-json.avif)
 
 **JSON API response** — append `?format=json` for a raw JSON endpoint:
 
