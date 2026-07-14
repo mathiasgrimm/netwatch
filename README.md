@@ -1,19 +1,25 @@
+<p align="center">
+    <img src="https://raw.githubusercontent.com/mathiasgrimm/netwatch/main/art/banner.avif" alt="Netwatch" width="100%">
+</p>
+
 # Netwatch
 
-Network service latency probing tool for PHP. Measures connectivity and response times to Redis, PostgreSQL, MySQL, S3, HTTP endpoints, and raw TCP services with statistical analysis.
+> Know your latency before your users do. Statistical network probing for Redis, databases, S3, and HTTP — from the CLI or inside Laravel.
 
+<p align="left">
+    <a href="https://packagist.org/packages/mathiasgrimm/netwatch"><img src="https://img.shields.io/packagist/v/mathiasgrimm/netwatch.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://github.com/mathiasgrimm/netwatch/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/mathiasgrimm/netwatch/tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
+    <a href="https://packagist.org/packages/mathiasgrimm/netwatch"><img src="https://img.shields.io/packagist/dt/mathiasgrimm/netwatch.svg?style=flat-square" alt="Total Downloads"></a>
+    <a href="https://packagist.org/packages/mathiasgrimm/netwatch"><img src="https://img.shields.io/badge/php-%E2%89%A58.3-777BB4?style=flat-square" alt="PHP Version"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
+</p>
+
+> [!WARNING]
 > **Alpha version** — This package is under active development. The API may change at any time, including breaking changes, without prior notice. Use at your own risk.
 
-## TODO
-- [ ] Include hostname/identification on the output
-- [ ] Running `php artisan netwatch:run` creates file called `host=;port=;dbname=`
+When an application feels slow, the first question is always the same: is it the app, or is it the network? Answering it usually means SSH-ing into a box and juggling `ping`, `redis-cli --latency`, `psql`, and `curl` by hand — with no consistent numbers to compare across environments.
 
-## Maybe
-- [ ] Post results to some endpoint after `php artisan netwatch:run`
-- [ ] Detect env/cached config. Maybe boot application once and cache it with a md5(.env)
-- [ ] Maybe `Concurrency::driver(’queue’)` for async when calling `/netwatch/health`
-- [ ] Store & Cleanup of metrics to view on a dashboard
-- [ ] Use Inertia (3) for the dashboard with polling
+Netwatch answers it in one command. It probes each of your services — Redis, MySQL, PostgreSQL, S3, HTTP endpoints, raw TCP — for N iterations, splits every measurement into connect and request time, and reports min/max/avg and p50/p95/p99 percentiles. Run it as a standalone CLI in any PHP project, or drop it into Laravel and get an Artisan command plus a health dashboard preconfigured from your existing `.env`.
 
 ## Features
 
@@ -24,11 +30,12 @@ Network service latency probing tool for PHP. Measures connectivity and response
 - **Laravel integration** — service provider with auto-discovery, Artisan command, and health dashboard
 - **Standalone CLI** — works with any PHP project via Symfony Console
 - **Fail-fast** — stops probing after 3 consecutive failures
+- **Custom probes** — implement a single interface to measure anything
 
 ## Requirements
 
 - PHP 8.3+
-- `ext-curl` (for S3 probe)
+- `ext-curl` (for HTTP and S3 probes)
 - `ext-redis` (for Redis probe, optional)
 - `ext-pdo` (for database probes, optional)
 
@@ -254,7 +261,7 @@ NETWATCH_ITERATIONS=10                        # Default probe iterations
 NETWATCH_HEALTH_ENABLED=false                 # Enable health dashboard route
 NETWATCH_DOMAIN=null                          # Domain for health route
 NETWATCH_PATH=netwatch                        # URL path prefix for health route
-NETWATCH_HEALTH_TOKEN=null                       # Token for monitoring-tool access (null = disabled)
+NETWATCH_HEALTH_TOKEN=null                    # Token for monitoring-tool access (null = disabled)
 
 NETWATCH_PROBE_DATABASE_ENABLED=false         # Enable database (PDO) probe
 NETWATCH_PROBE_REDIS_ENABLED=false            # Enable Redis probe
@@ -264,7 +271,7 @@ NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED=false   # Enable Cloudflare DNS (1.1.1.1) 
 NETWATCH_PROBE_GOOGLE_DNS_ENABLED=false       # Enable Google DNS (8.8.8.8) TCP probe
 ```
 
-## Standalone (without Laravel)
+## Standalone Usage
 
 ### CLI
 
@@ -576,6 +583,12 @@ composer install
 vendor/bin/pest
 ```
 
+Check code style:
+
+```bash
+vendor/bin/pint --test
+```
+
 ## License
 
-MIT
+The MIT License (MIT). Please see [License File](LICENSE) for more information.
