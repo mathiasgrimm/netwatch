@@ -1,0 +1,54 @@
+<svg width="2400" height="720" viewBox="0 0 2400 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="2400" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#131a2b"/>
+      <stop offset="0.55" stop-color="#0d1424"/>
+      <stop offset="1" stop-color="#0a0f1d"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38e1f5"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <radialGradient id="iconGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.28"/>
+      <stop offset="0.6" stop-color="#22d3ee" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <!-- background card -->
+  <rect width="2400" height="720" rx="64" fill="url(#bg)"/>
+
+  <!-- soft glow behind icon -->
+  <circle cx="420" cy="360" r="300" fill="url(#iconGlow)"/>
+
+  <!-- faint grid rings (radar hint) -->
+  <g stroke="#22d3ee" stroke-opacity="0.10" stroke-width="3" fill="none">
+    <circle cx="420" cy="360" r="150"/>
+    <circle cx="420" cy="360" r="215"/>
+  </g>
+
+  <!-- pulse waveform: blurred glow layer -->
+  <path d="M150 360 H300 L345 360 L385 250 L440 470 L490 300 L520 360 H560 L600 360"
+        stroke="#22d3ee" stroke-opacity="0.75" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" filter="url(#blur)"/>
+  <!-- pulse waveform: crisp layer -->
+  <path d="M150 360 H300 L345 360 L385 250 L440 470 L490 300 L520 360 H560 L600 360"
+        stroke="url(#accent)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- endpoint node -->
+  <circle cx="640" cy="360" r="16" fill="#38e1f5"/>
+  <circle cx="640" cy="360" r="30" stroke="#38e1f5" stroke-opacity="0.35" stroke-width="6" fill="none"/>
+
+  <!-- title -->
+  <text x="860" y="340" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="bold" font-size="150" letter-spacing="-3">
+    <tspan fill="#f8fafc">Net</tspan><tspan fill="url(#accent)">watch</tspan>
+  </text>
+
+  <!-- tagline -->
+  <text x="866" y="435" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="56" fill="#9fb0c7">Network latency probing for PHP</text>
+
+  <!-- sub-line -->
+  <text x="866" y="512" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="40" fill="#5f7189">Redis &#183; MySQL &#183; PostgreSQL &#183; S3 &#183; HTTP &#183; TCP &#8212; with p50 / p95 / p99 stats</text>
+</svg>
