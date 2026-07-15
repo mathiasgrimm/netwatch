@@ -188,6 +188,16 @@ NETWATCH_PATH=netwatch
 
 Access the dashboard at `/netwatch/health`.
 
+The HTML dashboard renders instantly and loads each probe asynchronously: every enabled probe appears immediately as a placeholder card, then its results stream in from `GET /netwatch/health/probes/{name}` (one concurrent request per probe, same auth as `/health`). Use the **Auto 30s** toolbar toggle to keep re-running the probes every 30 seconds while the tab is open (off by default, remembered per browser, paused while the tab is in the background).
+
+Cards accumulate results across refreshes: the sparkline grows run by run (thin separators mark each run, capped at the last 60 iterations), the stats table and headline p95 are computed over the full accumulated history, and the headline shows a p95 trend versus the previous run. When a run completes, cards re-sort by severity (failing first, then over-budget, then healthy) and the header shows a summary like `1 failing · 2 slow · 3 healthy`.
+
+**Latency budgets** — each probe has optional `warn`/`crit` thresholds in milliseconds, compared against its total p95: breaching `warn` turns the headline amber, `crit` turns it red. Defaults ship for the built-in probes (see Environment Variables below); set any threshold env to empty to disable it.
+
+The JSON API (`?format=json` or an `application/json` Accept header) is unaffected: it still runs all requested probes synchronously and returns the complete result set in one response.
+
+> **Upgrading?** If you previously published the views (`--tag=netwatch-views`), re-publish them: the dashboard now requires the async view and the new `partials/card.blade.php`. Likewise, a previously published `config/netwatch.php` won't contain the new per-probe `thresholds` entries — latency budgets stay disabled (no coloring) until you re-publish the config or add `'thresholds' => ['warn' => env(...), 'crit' => env(...)]` to your probes yourself; the `*_WARN_MS`/`*_CRIT_MS` env vars only work once those config lines exist.
+
 #### Query Parameters
 
 | Parameter | Example | Description |
@@ -200,15 +210,24 @@ Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&
 
 **HTML view** - interactive dashboard with per-probe latency stats:
 
-![Health Dashboard](docs/dashboard.avif)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.avif">
+  <img src="docs/dashboard-light.avif" alt="Health Dashboard">
+</picture>
 
 **Export image** - download a branded image summary of the current results (status, sparkline, and connect/request/total latency stats per probe) straight from the dashboard toolbar. Exports as WebP (~150 KB), falling back to PNG in browsers without WebP encoding:
 
-![Exported Health Summary Image](docs/export-image.avif)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/export-image-dark.avif">
+  <img src="docs/export-image-light.avif" alt="Exported Health Summary Image">
+</picture>
 
 **JSON panel** - view raw JSON data directly within the dashboard:
 
-![Health Dashboard - JSON Panel](docs/dashboard-json.avif)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-json-dark.avif">
+  <img src="docs/dashboard-json-light.avif" alt="Health Dashboard - JSON Panel">
+</picture>
 
 **JSON API response** - append `?format=json` for a raw JSON endpoint:
 
@@ -270,6 +289,19 @@ NETWATCH_PROBE_S3_ENABLED=false               # Enable S3 probe
 NETWATCH_PROBE_APP_ENABLED=false              # Enable HTTP probe for APP_URL
 NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED=false   # Enable Cloudflare DNS (1.1.1.1) TCP probe
 NETWATCH_PROBE_GOOGLE_DNS_ENABLED=false       # Enable Google DNS (8.8.8.8) TCP probe
+
+NETWATCH_PROBE_DATABASE_WARN_MS=10            # Latency budgets (total p95, ms) per probe.
+NETWATCH_PROBE_DATABASE_CRIT_MS=25            # warn = amber, crit = red on the dashboard.
+NETWATCH_PROBE_REDIS_WARN_MS=5                # Set any of them to null/empty to disable
+NETWATCH_PROBE_REDIS_CRIT_MS=25               # that threshold.
+NETWATCH_PROBE_S3_WARN_MS=150
+NETWATCH_PROBE_S3_CRIT_MS=500
+NETWATCH_PROBE_APP_WARN_MS=300
+NETWATCH_PROBE_APP_CRIT_MS=1000
+NETWATCH_PROBE_CLOUDFLARE_DNS_WARN_MS=25
+NETWATCH_PROBE_CLOUDFLARE_DNS_CRIT_MS=50
+NETWATCH_PROBE_GOOGLE_DNS_WARN_MS=25
+NETWATCH_PROBE_GOOGLE_DNS_CRIT_MS=50
 ```
 
 ## Standalone Usage

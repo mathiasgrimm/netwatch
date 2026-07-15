@@ -17,51 +17,50 @@ class HealthController
             ? array_map('trim', explode(',', $request->query('probes')))
             : null;
 
+        if ($this->shouldReturnHtml($request)) {
+            // The HTML dashboard runs no probes: it renders skeleton cards
+            // and fetches each probe from the per-probe endpoint.
+            $selected = $probeNames === null
+                ? $netwatch->probeNames()
+                : array_values(array_intersect($probeNames, $netwatch->probeNames()));
+
+            // Collect disabled probe names and latency thresholds from the raw config
+            $disabledProbes = [];
+            $thresholds = [];
+            foreach (config('netwatch.probes', []) as $name => $probeConfig) {
+                $enabled = $probeConfig['enabled'] ?? false;
+                if (! $enabled && ! in_array($name, $selected, true)) {
+                    $disabledProbes[] = $name;
+                }
+                if (in_array($name, $selected, true)) {
+                    $warn = $probeConfig['thresholds']['warn'] ?? null;
+                    $crit = $probeConfig['thresholds']['crit'] ?? null;
+                    $thresholds[$name] = [
+                        'warn' => is_numeric($warn) ? (float) $warn : null,
+                        'crit' => is_numeric($crit) ? (float) $crit : null,
+                    ];
+                }
+            }
+
+            return response(view('netwatch::health', [
+                'probeNames' => $selected,
+                'thresholds' => $thresholds,
+                'disabledProbes' => $disabledProbes,
+                'checkedAt' => now()->toIso8601String(),
+                'overallStatus' => $selected === [] ? 'healthy' : 'checking',
+                // Defaults for previously published copies of the old view
+                'results' => [],
+                'jsonData' => '{}',
+            ]));
+        }
+
         $results = $netwatch->run($probeNames);
 
         $withoutResults = $request->boolean('without_results');
 
         $data = [];
-        $totalFailures = 0;
-        $probesWithFailures = 0;
-        $totalProbes = 0;
-
         foreach ($results as $name => $result) {
             $data[$name] = $result->toArray($withoutResults);
-            $totalFailures += $result->failures;
-            $totalProbes++;
-            if ($result->failures > 0) {
-                $probesWithFailures++;
-            }
-        }
-
-        if ($this->shouldReturnHtml($request)) {
-            $overallStatus = $totalFailures === 0
-                ? 'healthy'
-                : ($probesWithFailures === $totalProbes ? 'unhealthy' : 'degraded');
-
-            // Collect disabled probe names from the raw config
-            $disabledProbes = [];
-            foreach (config('netwatch.probes', []) as $name => $probeConfig) {
-                $enabled = $probeConfig['enabled'] ?? false;
-                if (! $enabled && ! isset($data[$name])) {
-                    $disabledProbes[] = $name;
-                }
-            }
-
-            // Always build full data (with results) for the JSON panel in the HTML view
-            $jsonData = [];
-            foreach ($results as $name => $result) {
-                $jsonData[$name] = $result->toArray();
-            }
-
-            return response(view('netwatch::health', [
-                'results' => $data,
-                'disabledProbes' => $disabledProbes,
-                'jsonData' => json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-                'checkedAt' => now()->toIso8601String(),
-                'overallStatus' => $overallStatus,
-            ]));
         }
 
         return response()->json($data);

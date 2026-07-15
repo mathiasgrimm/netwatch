@@ -68,3 +68,18 @@ test('token not configured ignores query param and uses regular auth', function 
     $this->get('/netwatch/health?token=some-token', ['Accept' => 'application/json'])
         ->assertForbidden();
 });
+
+test('probe fragment endpoint requires auth', function () {
+    config(['netwatch.health_route.token' => 'secret-token']);
+
+    $this->get('/netwatch/health/probes/test-success')
+        ->assertForbidden();
+});
+
+test('probe fragment endpoint accepts matching token', function () {
+    config(['netwatch.health_route.token' => 'secret-token']);
+
+    $this->get('/netwatch/health/probes/test-success?token=secret-token')
+        ->assertOk()
+        ->assertJsonPath('probe', 'test-success');
+});
