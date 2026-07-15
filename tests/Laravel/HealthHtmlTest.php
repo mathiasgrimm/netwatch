@@ -135,6 +135,16 @@ test('probes query parameter filters to only specified probes in JSON', function
         ->assertJsonMissing(['name' => 'failing-probe']);
 });
 
+test('HTML includes the theme switcher', function () {
+    $response = $this->get('/netwatch/health?format=html');
+
+    $content = $response->getContent();
+    expect($content)
+        ->toContain('id="theme-toggle"')
+        ->toContain('netwatch-theme')
+        ->toContain('aria-label="Switch appearance');
+});
+
 test('probes query parameter works with HTML format', function () {
     $response = $this->get('/netwatch/health?probes=test-success&format=html');
 

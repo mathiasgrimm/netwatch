@@ -16,6 +16,16 @@
             'disabledProbes' => array_values($disabledProbes),
         ];
     @endphp
+    <script>
+        (function () {
+            var stored = null;
+            try { stored = localStorage.getItem('netwatch-theme'); } catch (e) {}
+            var mode = (stored === 'light' || stored === 'dark') ? stored : 'system';
+            var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme-mode', mode);
+        })();
+    </script>
     <style>
         :root {
             color-scheme: dark;
@@ -33,16 +43,83 @@
             --ok: #34d399;
             --warn: #fbbf24;
             --crit: #f87171;
+            --bg-glow: rgba(34, 211, 238, 0.07);
+            --bg-grad-1: #131a2b;
+            --bg-grad-2: #0d1424;
+            --bg-grad-3: #0a0f1d;
+            --ok-bg: rgba(52, 211, 153, 0.10);
+            --ok-border: rgba(52, 211, 153, 0.30);
+            --warn-bg: rgba(251, 191, 36, 0.10);
+            --warn-border: rgba(251, 191, 36, 0.30);
+            --crit-bg: rgba(248, 113, 113, 0.10);
+            --crit-bg-soft: rgba(248, 113, 113, 0.06);
+            --crit-border: rgba(248, 113, 113, 0.30);
+            --crit-border-strong: rgba(248, 113, 113, 0.40);
+            --crit-ink: #fca5a5;
+            --muted-bg: rgba(124, 141, 176, 0.10);
+            --muted-border: rgba(124, 141, 176, 0.25);
+            --cyan-bg: rgba(34, 211, 238, 0.06);
+            --cyan-bg-strong: rgba(34, 211, 238, 0.12);
+            --accent-border: rgba(34, 211, 238, 0.4);
+            --btn-bg: rgba(148, 170, 220, 0.06);
+            --seg-bg: rgba(13, 21, 38, 0.6);
+            --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            --border-faint: rgba(148, 170, 220, 0.06);
+            --surface-disabled: rgba(17, 26, 46, 0.45);
+            --code-ink: #cbd5e1;
+            --scrollbar: rgba(124, 141, 176, 0.25);
             --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
             --sans: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, sans-serif;
+        }
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --bg-0: #f4f7fb;
+            --surface-1: #ffffff;
+            --surface-2: #f1f5f9;
+            --border: rgba(28, 50, 90, 0.12);
+            --border-strong: rgba(28, 50, 90, 0.22);
+            --ink: #0f172a;
+            --ink-2: #3b4a63;
+            --ink-3: #5b6b84;
+            --cyan: #0891b2;
+            --cyan-hi: #06b6d4;
+            --cyan-lo: #0e7490;
+            --ok: #059669;
+            --warn: #b45309;
+            --crit: #dc2626;
+            --bg-glow: rgba(8, 145, 178, 0.06);
+            --bg-grad-1: #ffffff;
+            --bg-grad-2: #f5f8fc;
+            --bg-grad-3: #eef2f8;
+            --ok-bg: rgba(5, 150, 105, 0.10);
+            --ok-border: rgba(5, 150, 105, 0.35);
+            --warn-bg: rgba(180, 83, 9, 0.10);
+            --warn-border: rgba(180, 83, 9, 0.35);
+            --crit-bg: rgba(220, 38, 38, 0.08);
+            --crit-bg-soft: rgba(220, 38, 38, 0.05);
+            --crit-border: rgba(220, 38, 38, 0.35);
+            --crit-border-strong: rgba(220, 38, 38, 0.45);
+            --crit-ink: #b91c1c;
+            --muted-bg: rgba(100, 116, 139, 0.10);
+            --muted-border: rgba(100, 116, 139, 0.30);
+            --cyan-bg: rgba(8, 145, 178, 0.07);
+            --cyan-bg-strong: rgba(8, 145, 178, 0.12);
+            --accent-border: rgba(8, 145, 178, 0.45);
+            --btn-bg: rgba(28, 50, 90, 0.04);
+            --seg-bg: rgba(28, 50, 90, 0.05);
+            --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+            --border-faint: rgba(28, 50, 90, 0.06);
+            --surface-disabled: rgba(241, 245, 249, 0.6);
+            --code-ink: #334155;
+            --scrollbar: rgba(100, 116, 139, 0.30);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: var(--sans);
             color: var(--ink-2);
             background:
-                radial-gradient(1100px 480px at 50% -120px, rgba(34, 211, 238, 0.07), transparent 60%),
-                linear-gradient(160deg, #131a2b 0%, #0d1424 55%, #0a0f1d 100%);
+                radial-gradient(1100px 480px at 50% -120px, var(--bg-glow), transparent 60%),
+                linear-gradient(160deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 55%, var(--bg-grad-3) 100%);
             background-attachment: fixed;
             min-height: 100vh;
             line-height: 1.55;
@@ -119,7 +196,7 @@
             background: currentColor;
             flex: none;
         }
-        .badge-healthy { color: var(--ok); background: rgba(52, 211, 153, 0.10); border-color: rgba(52, 211, 153, 0.30); }
+        .badge-healthy { color: var(--ok); background: var(--ok-bg); border-color: var(--ok-border); }
         .badge-healthy .dot { box-shadow: 0 0 8px rgba(52, 211, 153, 0.6); }
         @media (prefers-reduced-motion: no-preference) {
             .badge-healthy .dot { animation: nw-pulse 2.5s ease-in-out infinite; }
@@ -128,16 +205,16 @@
                 50% { box-shadow: 0 0 10px rgba(52, 211, 153, 0.75); }
             }
         }
-        .badge-degraded { color: var(--warn); background: rgba(251, 191, 36, 0.10); border-color: rgba(251, 191, 36, 0.30); }
-        .badge-unhealthy, .badge-failures { color: var(--crit); background: rgba(248, 113, 113, 0.10); border-color: rgba(248, 113, 113, 0.30); }
-        .badge-disabled { color: var(--ink-3); background: rgba(124, 141, 176, 0.10); border-color: rgba(124, 141, 176, 0.25); }
+        .badge-degraded { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-border); }
+        .badge-unhealthy, .badge-failures { color: var(--crit); background: var(--crit-bg); border-color: var(--crit-border); }
+        .badge-disabled { color: var(--ink-3); background: var(--muted-bg); border-color: var(--muted-border); }
 
         /* ---------- buttons / toggle ---------- */
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            background: rgba(148, 170, 220, 0.06);
+            background: var(--btn-bg);
             border: 1px solid var(--border-strong);
             color: var(--ink-2);
             border-radius: 8px;
@@ -148,18 +225,22 @@
             cursor: pointer;
             transition: color 0.15s, border-color 0.15s, background 0.15s;
         }
-        .btn:hover { color: var(--ink); border-color: rgba(34, 211, 238, 0.4); }
-        .btn-success { color: var(--ok); border-color: rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.10); }
+        .btn:hover { color: var(--ink); border-color: var(--accent-border); }
+        .btn-icon { padding: 0.4rem 0.5rem; }
+        #theme-toggle .icon-light { display: none; }
+        :root[data-theme="light"] #theme-toggle .icon-light { display: block; }
+        :root[data-theme="light"] #theme-toggle .icon-dark { display: none; }
+        .btn-success { color: var(--ok); border-color: var(--ok-border); background: var(--ok-bg); }
         .seg {
             display: inline-flex;
             border: 1px solid var(--border);
             border-radius: 8px;
-            background: rgba(13, 21, 38, 0.6);
+            background: var(--seg-bg);
             padding: 2px;
         }
         .seg .btn { border: none; background: transparent; color: var(--ink-3); border-radius: 6px; }
         .seg .btn:hover { color: var(--ink-2); }
-        .seg .btn.active { background: rgba(34, 211, 238, 0.12); color: var(--cyan); }
+        .seg .btn.active { background: var(--cyan-bg-strong); color: var(--cyan); }
         :is(button, summary, a):focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 
         /* ---------- cards ---------- */
@@ -167,11 +248,11 @@
             background: var(--surface-1);
             border: 1px solid var(--border);
             border-radius: 12px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            box-shadow: var(--card-shadow);
             margin-bottom: 1.25rem;
             overflow: hidden;
         }
-        .card-failing { border-color: rgba(248, 113, 113, 0.35); }
+        .card-failing { border-color: var(--crit-border); }
         .card-header {
             display: flex;
             align-items: flex-start;
@@ -232,21 +313,40 @@
         .spark {
             display: flex;
             align-items: flex-end;
-            gap: 2px;
+            gap: clamp(1px, 0.4%, 3px);
             height: 44px;
             border-bottom: 1px solid var(--border);
             flex: 1;
             min-width: 120px;
+            overflow: hidden;
         }
         .spark-bar {
-            flex: 0 1 8px;
-            min-width: 2px;
+            flex: 1 1 0%;
+            min-width: 1px;
+            max-width: 10%;
             border-radius: 2px 2px 0 0;
             background: var(--cyan);
             opacity: 0.85;
         }
         .spark-bar:hover { opacity: 1; }
         .spark-fail { background: var(--crit); }
+        .spark-tip {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            pointer-events: none;
+            transform: translate(-50%, -100%);
+            font-family: var(--mono);
+            font-size: 0.6875rem;
+            color: var(--ink);
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 3px 8px;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+        .spark-tip-fail { color: var(--crit-ink); border-color: var(--crit-border); }
 
         /* ---------- stats table ---------- */
         .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -263,12 +363,12 @@
         }
         td {
             color: var(--ink-2);
-            border-bottom: 1px solid rgba(148, 170, 220, 0.06);
+            border-bottom: 1px solid var(--border-faint);
             font-variant-numeric: tabular-nums;
         }
         tr:last-child td { border-bottom: none; }
         tr.row-total td { color: var(--ink); font-weight: 600; }
-        th.col-p95, td.col-p95 { background: rgba(34, 211, 238, 0.06); }
+        th.col-p95, td.col-p95 { background: var(--cyan-bg); }
 
         /* ---------- errors ---------- */
         details.errors { margin-top: 1rem; }
@@ -298,9 +398,9 @@
         .error-list li {
             font-family: var(--mono);
             font-size: 0.75rem;
-            color: #fca5a5;
-            background: rgba(248, 113, 113, 0.06);
-            border-left: 2px solid rgba(248, 113, 113, 0.4);
+            color: var(--crit-ink);
+            background: var(--crit-bg-soft);
+            border-left: 2px solid var(--crit-border-strong);
             border-radius: 0 6px 6px 0;
             padding: 0.4rem 0.6rem;
             overflow-wrap: anywhere;
@@ -317,7 +417,7 @@
             margin: 2rem 0 0.75rem;
         }
         .card-disabled {
-            background: rgba(17, 26, 46, 0.45);
+            background: var(--surface-disabled);
             border: 1px dashed var(--border-strong);
             box-shadow: none;
         }
@@ -371,11 +471,11 @@
             font-family: var(--mono);
             font-size: 0.75rem;
             line-height: 1.6;
-            color: #cbd5e1;
+            color: var(--code-ink);
             white-space: pre;
         }
         ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-thumb { background: rgba(124, 141, 176, 0.25); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
 
         .footer { text-align: center; margin-top: 2.5rem; font-size: 0.75rem; color: var(--ink-3); }
@@ -426,6 +526,11 @@
                 </div>
                 <button class="btn" onclick="exportImage()">Export image</button>
                 <button class="btn" onclick="location.reload()">Run again</button>
+                <button class="btn btn-icon" id="theme-toggle" onclick="cycleTheme()"
+                        aria-label="Switch appearance (current: system)" title="Appearance: system">
+                    <svg class="icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg class="icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
             </div>
         </div>
 
@@ -474,7 +579,7 @@
                                     @foreach ($result['results'] as $i => $iteration)
                                         <span class="spark-bar{{ $iteration['success'] ? '' : ' spark-fail' }}"
                                               style="height: {{ max(8, round($iteration['total_ms'] / $maxTotal * 100)) }}%"
-                                              title="#{{ $i + 1 }} — {{ number_format($iteration['total_ms'], 2) }} ms{{ $iteration['success'] ? '' : ' — failed' }}"></span>
+                                              data-tip="#{{ $i + 1 }} — {{ number_format($iteration['total_ms'], 2) }} ms{{ $iteration['success'] ? '' : ' — failed' }}"></span>
                                     @endforeach
                                 </div>
                             @endif
@@ -976,6 +1081,67 @@
 
             tick();
             setInterval(tick, 1000);
+        })();
+
+        (function () {
+            var MODES = ['system', 'light', 'dark'];
+            var media = window.matchMedia('(prefers-color-scheme: dark)');
+            var root = document.documentElement;
+            var btn = document.getElementById('theme-toggle');
+
+            function apply(mode) {
+                var dark = mode === 'dark' || (mode === 'system' && media.matches);
+                root.setAttribute('data-theme', dark ? 'dark' : 'light');
+                root.setAttribute('data-theme-mode', mode);
+                btn.setAttribute('aria-label', 'Switch appearance (current: ' + mode + ')');
+                btn.title = 'Appearance: ' + mode;
+                try {
+                    if (mode === 'system') {
+                        localStorage.removeItem('netwatch-theme');
+                    } else {
+                        localStorage.setItem('netwatch-theme', mode);
+                    }
+                } catch (e) {}
+            }
+
+            window.cycleTheme = function () {
+                var current = root.getAttribute('data-theme-mode') || 'system';
+                apply(MODES[(MODES.indexOf(current) + 1) % MODES.length]);
+            };
+
+            media.addEventListener('change', function () {
+                if ((root.getAttribute('data-theme-mode') || 'system') === 'system') {
+                    apply('system');
+                }
+            });
+
+            apply(root.getAttribute('data-theme-mode') || 'system');
+        })();
+
+        (function () {
+            var tip = document.createElement('div');
+            tip.className = 'spark-tip';
+            document.body.appendChild(tip);
+
+            document.addEventListener('mouseover', function (e) {
+                var bar = e.target.closest ? e.target.closest('.spark-bar') : null;
+                if (!bar) return;
+                tip.textContent = bar.getAttribute('data-tip');
+                tip.classList.toggle('spark-tip-fail', bar.classList.contains('spark-fail'));
+                tip.style.display = 'block';
+                var rect = bar.getBoundingClientRect();
+                var half = tip.offsetWidth / 2;
+                var left = rect.left + rect.width / 2;
+                left = Math.max(half + 4, Math.min(left, window.innerWidth - half - 4));
+                tip.style.left = left + 'px';
+                tip.style.top = (rect.top - 6) + 'px';
+            });
+
+            document.addEventListener('mouseout', function (e) {
+                if (e.target.closest && e.target.closest('.spark-bar')) {
+                    tip.style.display = 'none';
+                }
+            });
         })();
     </script>
 </body>
