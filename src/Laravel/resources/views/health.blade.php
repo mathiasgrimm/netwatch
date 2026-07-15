@@ -579,7 +579,7 @@
                                     @foreach ($result['results'] as $i => $iteration)
                                         <span class="spark-bar{{ $iteration['success'] ? '' : ' spark-fail' }}"
                                               style="height: {{ max(8, round($iteration['total_ms'] / $maxTotal * 100)) }}%"
-                                              data-tip="#{{ $i + 1 }} — {{ number_format($iteration['total_ms'], 2) }} ms{{ $iteration['success'] ? '' : ' — failed' }}"></span>
+                                              data-tip="#{{ $i + 1 }} · {{ number_format($iteration['total_ms'], 2) }} ms{{ $iteration['success'] ? '' : ' · failed' }}"></span>
                                     @endforeach
                                 </div>
                             @endif
