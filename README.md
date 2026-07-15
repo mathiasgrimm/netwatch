@@ -18,10 +18,15 @@ When an application feels slow, the first question is always the same: is it the
 
 Netwatch answers it in one command. It probes each of your services - Redis, MySQL, PostgreSQL, S3, HTTP endpoints, raw TCP - for N iterations, splits every measurement into connect and request time, and reports min/max/avg and p50/p95/p99 percentiles. Run it as a standalone CLI in any PHP project, or drop it into Laravel and get an Artisan command plus a health dashboard preconfigured from your existing `.env`.
 
+<p align="center">
+    <img src="docs/dashboard-dark.avif" alt="Netwatch health dashboard" width="100%">
+</p>
+
 ## Features
 
 - **Multiple probe types** - HTTP, TCP/IP, Redis (php-redis), MySQL/PostgreSQL/SQLite (PDO), AWS S3
 - **Statistical analysis** - min, max, avg, p50, p95, p99 for connect, request, and total latency
+- **Latency budgets** - per-probe warn/crit thresholds drive the dashboard, JSON API and CLI alike, with `--fail-on-crit` for cron/CI
 - **Parallel execution** - probes run concurrently via subprocesses (default in CLI)
 - **Per-probe configuration** - individual iteration counts, enable/disable flags, serializable probe definitions
 - **Laravel integration** - service provider with auto-discovery, Artisan command, and health dashboard
