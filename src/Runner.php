@@ -10,7 +10,7 @@ use Mathiasgrimm\Netwatch\Result\ProbeResult;
 
 class Runner
 {
-    public function run(ProbeInterface $probe, int $iterations, int $failThreshold = 3): AggregateResult
+    public function run(ProbeInterface $probe, int $iterations, int $failThreshold = 3, ?array $thresholds = null): AggregateResult
     {
         $results = [];
         $failures = 0;
@@ -40,6 +40,7 @@ class Runner
             stats: $stats,
             failures: $failures,
             results: $results,
+            thresholds: $thresholds,
         );
     }
 

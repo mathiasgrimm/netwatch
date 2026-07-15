@@ -46,11 +46,19 @@ return [
     | and contain a 'probe' instance implementing ProbeInterface.
     | Set the 'enabled' flag to true (via env) for the probes you want to use.
     |
+    | 'thresholds' are latency limits in milliseconds, checked against the
+    | probe's total p95 on the dashboard (warn = amber, crit = red).
+    | Set an env value to null/empty to disable that threshold.
+    |
     */
     'probes' => [
 
         'database' => [
             'enabled' => env('NETWATCH_PROBE_DATABASE_ENABLED', false),
+            'thresholds' => [
+                'warn' => env('NETWATCH_PROBE_DATABASE_WARN_MS', 10),
+                'crit' => env('NETWATCH_PROBE_DATABASE_CRIT_MS', 25),
+            ],
             'probe' => [
                 PdoProbe::class => [
                     env('DB_CONNECTION').':host='.env('DB_HOST').';port='.env('DB_PORT').';dbname='.env('DB_DATABASE'),
@@ -62,6 +70,10 @@ return [
 
         'redis' => [
             'enabled' => env('NETWATCH_PROBE_REDIS_ENABLED', false),
+            'thresholds' => [
+                'warn' => env('NETWATCH_PROBE_REDIS_WARN_MS', 5),
+                'crit' => env('NETWATCH_PROBE_REDIS_CRIT_MS', 25),
+            ],
             'probe' => [
                 PhpRedisProbe::class => [
                     env('REDIS_HOST').':'.env('REDIS_PORT'),
@@ -73,6 +85,10 @@ return [
 
         's3' => [
             'enabled' => env('NETWATCH_PROBE_S3_ENABLED', false),
+            'thresholds' => [
+                'warn' => env('NETWATCH_PROBE_S3_WARN_MS', 150),
+                'crit' => env('NETWATCH_PROBE_S3_CRIT_MS', 500),
+            ],
             'probe' => [
                 S3Probe::class => [
                     env('AWS_BUCKET'),
@@ -86,6 +102,10 @@ return [
 
         'app' => [
             'enabled' => env('NETWATCH_PROBE_APP_ENABLED', false),
+            'thresholds' => [
+                'warn' => env('NETWATCH_PROBE_APP_WARN_MS', 300),
+                'crit' => env('NETWATCH_PROBE_APP_CRIT_MS', 1000),
+            ],
             'probe' => [
                 HttpProbe::class => [
                     env('APP_URL'),
@@ -95,6 +115,10 @@ return [
 
         'cloudflare-dns' => [
             'enabled' => env('NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED', false),
+            'thresholds' => [
+                'warn' => env('NETWATCH_PROBE_CLOUDFLARE_DNS_WARN_MS', 25),
+                'crit' => env('NETWATCH_PROBE_CLOUDFLARE_DNS_CRIT_MS', 50),
+            ],
             'probe' => [
                 TcpPingProbe::class => [
                     '1.1.1.1',
@@ -105,6 +129,10 @@ return [
 
         'google-dns' => [
             'enabled' => env('NETWATCH_PROBE_GOOGLE_DNS_ENABLED', false),
+            'thresholds' => [
+                'warn' => env('NETWATCH_PROBE_GOOGLE_DNS_WARN_MS', 25),
+                'crit' => env('NETWATCH_PROBE_GOOGLE_DNS_CRIT_MS', 50),
+            ],
             'probe' => [
                 TcpPingProbe::class => [
                     '8.8.8.8',
