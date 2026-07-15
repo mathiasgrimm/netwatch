@@ -14,9 +14,6 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
 </p>
 
-> [!WARNING]
-> **Alpha version** — This package is under active development. The API may change at any time, including breaking changes, without prior notice. Use at your own risk.
-
 When an application feels slow, the first question is always the same: is it the app, or is it the network? Answering it usually means SSH-ing into a box and juggling `ping`, `redis-cli --latency`, `psql`, and `curl` by hand — with no consistent numbers to compare across environments.
 
 Netwatch answers it in one command. It probes each of your services — Redis, MySQL, PostgreSQL, S3, HTTP endpoints, raw TCP — for N iterations, splits every measurement into connect and request time, and reports min/max/avg and p50/p95/p99 percentiles. Run it as a standalone CLI in any PHP project, or drop it into Laravel and get an Artisan command plus a health dashboard preconfigured from your existing `.env`.
