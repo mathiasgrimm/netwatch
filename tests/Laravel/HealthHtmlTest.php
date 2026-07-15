@@ -148,9 +148,40 @@ test('HTML exposes latency thresholds from config', function () {
         ->toContain('"crit":25');
 });
 
-test('HTML thresholds are null when not configured or non-numeric', function () {
-    // The beforeEach probes define no thresholds key; env('X', default) with a
-    // null .env value produces null, which must disable the threshold.
+test('HTML thresholds are null for custom probes without thresholds', function () {
+    // The beforeEach probes define no thresholds key and their names have no
+    // package default to fall back to, so both budgets stay disabled.
+    $content = $this->get('/netwatch/health?format=html')->getContent();
+
+    expect($content)->toContain('"warn":null')
+        ->toContain('"crit":null');
+});
+
+test('HTML thresholds fall back to package defaults when the key is absent', function () {
+    // Simulates a config file published before thresholds existed: the probe
+    // key matches a built-in probe but carries no thresholds entry.
+    config([
+        'netwatch.probes' => [
+            'database' => ['enabled' => true, 'probe' => new SuccessProbe],
+        ],
+    ]);
+    $this->app->forgetInstance(Netwatch::class);
+
+    $content = $this->get('/netwatch/health?format=html')->getContent();
+
+    expect($content)
+        ->toContain('"warn":10')
+        ->toContain('"crit":25');
+});
+
+test('HTML thresholds are disabled when explicitly set to null', function () {
+    config([
+        'netwatch.probes' => [
+            'database' => ['enabled' => true, 'probe' => new SuccessProbe, 'thresholds' => null],
+        ],
+    ]);
+    $this->app->forgetInstance(Netwatch::class);
+
     $content = $this->get('/netwatch/health?format=html')->getContent();
 
     expect($content)->toContain('"warn":null')

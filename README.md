@@ -196,7 +196,7 @@ Cards accumulate results across refreshes: the sparkline grows run by run (thin 
 
 The JSON API (`?format=json` or an `application/json` Accept header) is unaffected: it still runs all requested probes synchronously and returns the complete result set in one response.
 
-> **Upgrading?** If you previously published the views (`--tag=netwatch-views`), re-publish them: the dashboard now requires the async view and the new `partials/card.blade.php`. Likewise, a previously published `config/netwatch.php` won't contain the new per-probe `thresholds` entries — latency budgets stay disabled (no coloring) until you re-publish the config or add `'thresholds' => ['warn' => env(...), 'crit' => env(...)]` to your probes yourself; the `*_WARN_MS`/`*_CRIT_MS` env vars only work once those config lines exist.
+> **Upgrading?** If you previously published the views (`--tag=netwatch-views`), re-publish them: the dashboard now requires the async view and the new `partials/card.blade.php`. A previously published `config/netwatch.php` keeps working: built-in probes whose config has no `thresholds` key fall back to the package defaults (still tunable via the `*_WARN_MS`/`*_CRIT_MS` env vars). Setting `'thresholds' => null` — or any individual value to null/empty — explicitly disables the budget.
 
 #### Query Parameters
 

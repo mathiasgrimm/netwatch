@@ -33,12 +33,7 @@ class HealthController
                     $disabledProbes[] = $name;
                 }
                 if (in_array($name, $selected, true)) {
-                    $warn = $probeConfig['thresholds']['warn'] ?? null;
-                    $crit = $probeConfig['thresholds']['crit'] ?? null;
-                    $thresholds[$name] = [
-                        'warn' => is_numeric($warn) ? (float) $warn : null,
-                        'crit' => is_numeric($crit) ? (float) $crit : null,
-                    ];
+                    $thresholds[$name] = $this->thresholdsFor($name, $probeConfig);
                 }
             }
 
@@ -64,6 +59,31 @@ class HealthController
         }
 
         return response()->json($data);
+    }
+
+    /**
+     * A probe config without a 'thresholds' key (e.g. a config file published
+     * before thresholds existed) falls back to the package defaults for that
+     * probe. A 'thresholds' key that is present but null/non-numeric is an
+     * explicit opt-out and disables the budget.
+     */
+    private function thresholdsFor(string $name, array $probeConfig): array
+    {
+        if (array_key_exists('thresholds', $probeConfig)) {
+            $config = $probeConfig['thresholds'] ?? [];
+        } else {
+            static $packageProbes;
+            $packageProbes ??= (require dirname(__DIR__, 2).'/config/netwatch.php')['probes'] ?? [];
+            $config = $packageProbes[$name]['thresholds'] ?? [];
+        }
+
+        $warn = $config['warn'] ?? null;
+        $crit = $config['crit'] ?? null;
+
+        return [
+            'warn' => is_numeric($warn) ? (float) $warn : null,
+            'crit' => is_numeric($crit) ? (float) $crit : null,
+        ];
     }
 
     private function shouldReturnHtml(Request $request): bool
