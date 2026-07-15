@@ -142,7 +142,8 @@ test('HTML includes the theme switcher', function () {
     expect($content)
         ->toContain('id="theme-toggle"')
         ->toContain('netwatch-theme')
-        ->toContain('aria-label="Switch appearance');
+        ->toContain('aria-label="Switch theme"')
+        ->toContain('window.toggleTheme');
 });
 
 test('probes query parameter works with HTML format', function () {
