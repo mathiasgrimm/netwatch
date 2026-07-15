@@ -4,7 +4,7 @@
 
 # Netwatch
 
-> Know your latency before your users do. Statistical network probing for Redis, databases, S3, and HTTP — from the CLI or inside Laravel.
+> Know your latency before your users do. Statistical network probing for Redis, databases, S3, and HTTP - from the CLI or inside Laravel.
 
 <p align="left">
     <a href="https://packagist.org/packages/mathiasgrimm/netwatch"><img src="https://img.shields.io/packagist/v/mathiasgrimm/netwatch.svg?style=flat-square" alt="Latest Version on Packagist"></a>
@@ -14,20 +14,20 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
 </p>
 
-When an application feels slow, the first question is always the same: is it the app, or is it the network? Answering it usually means SSH-ing into a box and juggling `ping`, `redis-cli --latency`, `psql`, and `curl` by hand — with no consistent numbers to compare across environments.
+When an application feels slow, the first question is always the same: is it the app, or is it the network? Answering it usually means SSH-ing into a box and juggling `ping`, `redis-cli --latency`, `psql`, and `curl` by hand - with no consistent numbers to compare across environments.
 
-Netwatch answers it in one command. It probes each of your services — Redis, MySQL, PostgreSQL, S3, HTTP endpoints, raw TCP — for N iterations, splits every measurement into connect and request time, and reports min/max/avg and p50/p95/p99 percentiles. Run it as a standalone CLI in any PHP project, or drop it into Laravel and get an Artisan command plus a health dashboard preconfigured from your existing `.env`.
+Netwatch answers it in one command. It probes each of your services - Redis, MySQL, PostgreSQL, S3, HTTP endpoints, raw TCP - for N iterations, splits every measurement into connect and request time, and reports min/max/avg and p50/p95/p99 percentiles. Run it as a standalone CLI in any PHP project, or drop it into Laravel and get an Artisan command plus a health dashboard preconfigured from your existing `.env`.
 
 ## Features
 
-- **Multiple probe types** — HTTP, TCP/IP, Redis (php-redis), MySQL/PostgreSQL/SQLite (PDO), AWS S3
-- **Statistical analysis** — min, max, avg, p50, p95, p99 for connect, request, and total latency
-- **Parallel execution** — probes run concurrently via subprocesses (default in CLI)
-- **Per-probe configuration** — individual iteration counts, enable/disable flags, serializable probe definitions
-- **Laravel integration** — service provider with auto-discovery, Artisan command, and health dashboard
-- **Standalone CLI** — works with any PHP project via Symfony Console
-- **Fail-fast** — stops probing after 3 consecutive failures
-- **Custom probes** — implement a single interface to measure anything
+- **Multiple probe types** - HTTP, TCP/IP, Redis (php-redis), MySQL/PostgreSQL/SQLite (PDO), AWS S3
+- **Statistical analysis** - min, max, avg, p50, p95, p99 for connect, request, and total latency
+- **Parallel execution** - probes run concurrently via subprocesses (default in CLI)
+- **Per-probe configuration** - individual iteration counts, enable/disable flags, serializable probe definitions
+- **Laravel integration** - service provider with auto-discovery, Artisan command, and health dashboard
+- **Standalone CLI** - works with any PHP project via Symfony Console
+- **Fail-fast** - stops probing after 3 consecutive failures
+- **Custom probes** - implement a single interface to measure anything
 
 ## Requirements
 
@@ -198,19 +198,19 @@ Access the dashboard at `/netwatch/health`.
 
 Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&without_results=1`
 
-**HTML view** — interactive dashboard with per-probe latency stats:
+**HTML view** - interactive dashboard with per-probe latency stats:
 
 ![Health Dashboard](docs/dashboard.avif)
 
-**Export image** — download a branded image summary of the current results (status, sparkline, and connect/request/total latency stats per probe) straight from the dashboard toolbar. Exports as WebP (~150 KB), falling back to PNG in browsers without WebP encoding:
+**Export image** - download a branded image summary of the current results (status, sparkline, and connect/request/total latency stats per probe) straight from the dashboard toolbar. Exports as WebP (~150 KB), falling back to PNG in browsers without WebP encoding:
 
 ![Exported Health Summary Image](docs/export-image.avif)
 
-**JSON panel** — view raw JSON data directly within the dashboard:
+**JSON panel** - view raw JSON data directly within the dashboard:
 
 ![Health Dashboard - JSON Panel](docs/dashboard-json.avif)
 
-**JSON API response** — append `?format=json` for a raw JSON endpoint:
+**JSON API response** - append `?format=json` for a raw JSON endpoint:
 
 ![Health Dashboard - JSON API Response](docs/dashboard-json-format.jpg)
 
@@ -373,9 +373,9 @@ Each probe entry supports:
 
 The `probe` value supports three formats:
 
-- **Instance** — a `ProbeInterface` object, used as-is
-- **Class string** — e.g. `PhpRedisProbe::class`, instantiated with no arguments
-- **Array** — `[Class::class => [arg1, arg2, ...]]`, instantiated with the given arguments. This format is serializable, making it compatible with `php artisan config:cache`.
+- **Instance** - a `ProbeInterface` object, used as-is
+- **Class string** - e.g. `PhpRedisProbe::class`, instantiated with no arguments
+- **Array** - `[Class::class => [arg1, arg2, ...]]`, instantiated with the given arguments. This format is serializable, making it compatible with `php artisan config:cache`.
 
 ```php
 // Array format (serializable)
