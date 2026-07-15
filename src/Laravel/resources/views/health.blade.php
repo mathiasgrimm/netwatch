@@ -698,7 +698,7 @@
             </div>
         </div>
 
-        <div class="footer">Powered by Netwatch · Made with <span class="heart">♥</span> by <a href="https://mathiasgrimm.com" target="_blank" rel="noopener">Mathias Grimm</a></div>
+        <div class="footer">Powered by <a href="https://github.com/mathiasgrimm/netwatch" target="_blank" rel="noopener">Netwatch</a> · Made with <span class="heart">♥</span> by <a href="https://mathiasgrimm.com" target="_blank" rel="noopener">Mathias Grimm</a></div>
     </div>
 
     <script>
