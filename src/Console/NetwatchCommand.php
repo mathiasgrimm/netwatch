@@ -30,7 +30,7 @@ class NetwatchCommand extends Command
             ->addOption('sequential', null, InputOption::VALUE_NONE, 'Run probes sequentially instead of in parallel')
             ->addOption('json', null, InputOption::VALUE_NONE, 'Output results as JSON')
             ->addOption('without-results', null, InputOption::VALUE_NONE, 'Exclude individual iteration results from JSON output')
-            ->addOption('fail-on-crit', null, InputOption::VALUE_NONE, 'Exit non-zero when any probe fails or breaches its crit latency budget');
+            ->addOption('fail-on-crit', null, InputOption::VALUE_NONE, 'Exit non-zero when any probe fails or breaches its crit latency threshold');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -246,7 +246,7 @@ class NetwatchCommand extends Command
     }
 
     /**
-     * Color the total p95 against the probe's latency budget.
+     * Color the total p95 against the probe's latency threshold.
      */
     private function p95Cell(AggregateResult $result, float|int $p95): string
     {

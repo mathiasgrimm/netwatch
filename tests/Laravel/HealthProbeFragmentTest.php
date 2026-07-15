@@ -61,7 +61,7 @@ test('html fragment contains the card markup', function () {
 test('crit breach renders critical badge instead of healthy', function () {
     config([
         'netwatch.probes' => [
-            // SuccessProbe totals 3.0 ms; crit 2 puts it over budget
+            // SuccessProbe totals 3.0 ms; crit 2 puts it over the crit threshold
             'test-success' => [
                 'enabled' => true,
                 'probe' => new SuccessProbe,

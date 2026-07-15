@@ -46,7 +46,7 @@ class NetwatchServiceProvider extends ServiceProvider
      * A probe config without a 'thresholds' key (e.g. a config file published
      * before thresholds existed) falls back to the package defaults for that
      * probe. A 'thresholds' key that is present but null is an explicit
-     * opt-out and disables the budget.
+     * opt-out and disables the threshold.
      */
     private static function withDefaultThresholds(array $probes): array
     {

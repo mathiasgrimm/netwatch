@@ -18,7 +18,7 @@ class NetwatchCommand extends Command
         {--probe= : Run only a specific probe by name}
         {--json : Output results as JSON}
         {--without-results : Exclude individual iteration results from JSON output}
-        {--fail-on-crit : Exit non-zero when any probe fails or breaches its crit latency budget}';
+        {--fail-on-crit : Exit non-zero when any probe fails or breaches its crit latency threshold}';
 
     protected $description = 'Run network probes and display latency statistics';
 
@@ -104,7 +104,7 @@ class NetwatchCommand extends Command
     }
 
     /**
-     * Color the total p95 against the probe's latency budget.
+     * Color the total p95 against the probe's latency threshold.
      */
     private function p95Cell(AggregateResult $result, float|int $p95): string
     {

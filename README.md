@@ -26,7 +26,7 @@ Netwatch answers it in one command. It probes each of your services - Redis, MyS
 
 - **Multiple probe types** - HTTP, TCP/IP, Redis (php-redis), MySQL/PostgreSQL/SQLite (PDO), AWS S3
 - **Statistical analysis** - min, max, avg, p50, p95, p99 for connect, request, and total latency
-- **Latency budgets** - per-probe warn/crit thresholds drive the dashboard, JSON API and CLI alike, with `--fail-on-crit` for cron/CI
+- **Latency thresholds** - per-probe warn/crit limits drive the dashboard, JSON API and CLI alike, with `--fail-on-crit` for cron/CI
 - **Parallel execution** - probes run concurrently via subprocesses (default in CLI)
 - **Per-probe configuration** - individual iteration counts, enable/disable flags, serializable probe definitions
 - **Laravel integration** - service provider with auto-discovery, Artisan command, and health dashboard
@@ -179,7 +179,7 @@ php artisan netwatch:run --json --without-results
 | `--probe=NAME` | Run only a specific probe by name (e.g. `--probe=redis`) |
 | `--json` | Output results as JSON instead of a table |
 | `--without-results` | Exclude individual iteration results from JSON output |
-| `--fail-on-crit` | Exit non-zero when any probe fails or breaches its crit latency budget |
+| `--fail-on-crit` | Exit non-zero when any probe fails or breaches its crit latency threshold |
 
 ![CLI Table Output](docs/cli.avif)
 
@@ -196,13 +196,13 @@ Access the dashboard at `/netwatch/health`.
 
 The HTML dashboard renders instantly and loads each probe asynchronously: every enabled probe appears immediately as a placeholder card, then its results stream in from `GET /netwatch/health/probes/{name}` (one concurrent request per probe, same auth as `/health`). Use the **Auto 30s** toolbar toggle to keep re-running the probes every 30 seconds while the tab is open (off by default, remembered per browser, paused while the tab is in the background).
 
-Cards accumulate results across refreshes: the sparkline grows run by run (thin separators mark each run, capped at the last 60 iterations), the stats table and headline p95 are computed over the full accumulated history, and the headline shows a p95 trend versus the previous run. When a run completes, cards re-sort by severity (failing first, then over-budget, then healthy) and the header shows a summary like `1 failing · 2 slow · 3 healthy`.
+Cards accumulate results across refreshes: the sparkline grows run by run (thin separators mark each run, capped at the last 60 iterations), the stats table and headline p95 are computed over the full accumulated history, and the headline shows a p95 trend versus the previous run. When a run completes, cards re-sort by severity (failing first, then over-threshold, then healthy) and the header shows a summary like `1 failing · 2 slow · 3 healthy`.
 
-**Latency budgets** — each probe has optional `warn`/`crit` thresholds in milliseconds. The probe-level status compares the budget against total p95 (breaching `warn` turns the headline amber, `crit` red), and every individual iteration is checked too: over-budget samples color their sparkline bars amber/red, dashed guide lines mark the budgets on the chart, and the JSON payload carries a status per sample plus `over_warn`/`over_crit` counts. Defaults ship for the built-in probes (see Environment Variables below); set any threshold env to empty to disable it. The same budgets drive the dashboard, the JSON API, and the CLI.
+**Latency thresholds** — each probe has optional `warn`/`crit` thresholds in milliseconds. The probe-level status compares total p95 against them (breaching `warn` turns the headline amber, `crit` red), and every individual iteration is checked too: over-threshold samples color their sparkline bars amber/red, dashed guide lines mark the thresholds on the chart, and the JSON payload carries a status per sample plus `over_warn`/`over_crit` counts. Defaults ship for the built-in probes (see Environment Variables below); set any threshold env to empty to disable it. The same thresholds drive the dashboard, the JSON API, and the CLI.
 
 The JSON API (`?format=json` or an `application/json` Accept header) is unaffected: it still runs all requested probes synchronously and returns the complete result set in one response.
 
-> **Upgrading?** If you previously published the views (`--tag=netwatch-views`), re-publish them: the dashboard now requires the async view and the new `partials/card.blade.php`. A previously published `config/netwatch.php` keeps working: built-in probes whose config has no `thresholds` key fall back to the package defaults (still tunable via the `*_WARN_MS`/`*_CRIT_MS` env vars). Setting `'thresholds' => null` — or any individual value to null/empty — explicitly disables the budget.
+> **Upgrading?** If you previously published the views (`--tag=netwatch-views`), re-publish them: the dashboard now requires the async view and the new `partials/card.blade.php`. A previously published `config/netwatch.php` keeps working: built-in probes whose config has no `thresholds` key fall back to the package defaults (still tunable via the `*_WARN_MS`/`*_CRIT_MS` env vars). Setting `'thresholds' => null` — or any individual value to null/empty — explicitly disables the threshold.
 
 #### Query Parameters
 
@@ -212,7 +212,7 @@ The JSON API (`?format=json` or an `application/json` Accept header) is unaffect
 | `probes` | `?probes=redis,database` | Comma-separated list of probe names to run. Only the specified probes are executed; others are skipped. |
 | `without_results` | `?without_results=1` | Exclude individual iteration results from the response, returning only aggregate stats. Useful for smaller payloads. |
 
-Each probe in the JSON response includes, alongside `stats`, `failures` and `results`: a `status` (`ok` / `warn` / `crit` / `failing`, evaluated from the latency budgets), the resolved `thresholds`, `over_warn`/`over_crit` sample counts, and a per-iteration `status` on every entry in `results`.
+Each probe in the JSON response includes, alongside `stats`, `failures` and `results`: a `status` (`ok` / `warn` / `crit` / `failing`, evaluated from the latency thresholds), the resolved `thresholds`, `over_warn`/`over_crit` sample counts, and a per-iteration `status` on every entry in `results`.
 
 Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&without_results=1`
 
@@ -295,7 +295,7 @@ NETWATCH_PROBE_APP_ENABLED=false              # Enable HTTP probe for APP_URL
 NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED=false   # Enable Cloudflare DNS (1.1.1.1) TCP probe
 NETWATCH_PROBE_GOOGLE_DNS_ENABLED=false       # Enable Google DNS (8.8.8.8) TCP probe
 
-NETWATCH_PROBE_DATABASE_WARN_MS=10            # Latency budgets (total p95, ms) per probe.
+NETWATCH_PROBE_DATABASE_WARN_MS=10            # Latency thresholds (total p95, ms) per probe.
 NETWATCH_PROBE_DATABASE_CRIT_MS=25            # warn = amber, crit = red on the dashboard.
 NETWATCH_PROBE_REDIS_WARN_MS=5                # Set any of them to null/empty to disable
 NETWATCH_PROBE_REDIS_CRIT_MS=25               # that threshold.
@@ -328,11 +328,11 @@ vendor/bin/netwatch netwatch:run --probe redis --iterations 20
 # JSON output
 vendor/bin/netwatch netwatch:run --json
 
-# Exit non-zero when any probe fails or breaches its crit budget (cron/CI)
+# Exit non-zero when any probe fails or breaches its crit threshold (cron/CI)
 vendor/bin/netwatch netwatch:run --fail-on-crit
 ```
 
-The table shows a per-probe `Status` column and colors the total p95 against the probe's latency budget (amber over `warn`, red over `crit`) — the same budgets the dashboard and JSON API use. `netwatch:run` inside Laravel (artisan) supports the same options.
+The table shows a per-probe `Status` column and colors the total p95 against the probe's latency threshold (amber over `warn`, red over `crit`) — the same thresholds the dashboard and JSON API use. `netwatch:run` inside Laravel (artisan) supports the same options.
 
 ### Programmatic
 
@@ -576,7 +576,7 @@ vendor/bin/netwatch netwatch:init [options]
 +--------+--------+------------+----------+---------+----------+----------+----------+----------+----------+----------+
 ```
 
-The `Status` column and the total P95 cell are colored against the probe's latency budget: green/plain when within budget, amber at `warn`, red at `crit` or when iterations fail.
+The `Status` column and the total P95 cell are colored against the probe's latency thresholds: green/plain when within them, amber at `warn`, red at `crit` or when iterations fail.
 
 ### JSON Output
 
@@ -602,7 +602,7 @@ The `Status` column and the total P95 cell are colored against the probe's laten
 }
 ```
 
-`status` is `ok` / `warn` / `crit` (total p95 vs the budgets) or `failing` (any iteration failed). Every entry in `results` also carries its own per-iteration `status`, and `over_warn`/`over_crit` count the samples at or over each budget.
+`status` is `ok` / `warn` / `crit` (total p95 vs the thresholds) or `failing` (any iteration failed). Every entry in `results` also carries its own per-iteration `status`, and `over_warn`/`over_crit` count the samples at or over each threshold.
 
 ![CLI JSON Output](docs/cli-json.avif)
 

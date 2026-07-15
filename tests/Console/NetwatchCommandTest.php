@@ -243,7 +243,7 @@ test('fail-on-crit exits non-zero on failing probe', function () {
     expect($tester->getStatusCode())->toBe(1);
 });
 
-test('fail-on-crit exits zero when within budget', function () {
+test('fail-on-crit exits zero when within thresholds', function () {
     $tester = createRunCommandTester();
     $tester->execute([
         '--config' => writeThresholdConfig($this->configDir, 100.0, 200.0),

@@ -105,7 +105,7 @@ test('status is ok without thresholds or failures', function () {
         ->and($aggregate->toArray()['thresholds'])->toBe(['warn' => null, 'crit' => null]);
 });
 
-test('status evaluates total p95 against warn and crit budgets', function () {
+test('status evaluates total p95 against warn and crit thresholds', function () {
     $stats = [
         'connect_ms' => ['min' => 1.0, 'max' => 1.0, 'avg' => 1.0, 'p50' => 1.0, 'p95' => 1.0, 'p99' => 1.0],
         'request_ms' => ['min' => 2.0, 'max' => 2.0, 'avg' => 2.0, 'p50' => 2.0, 'p95' => 2.0, 'p99' => 2.0],
@@ -124,7 +124,7 @@ test('status evaluates total p95 against warn and crit budgets', function () {
         ->and($warnOnly->status())->toBe('warn');
 });
 
-test('status is failing when any iteration failed regardless of budgets', function () {
+test('status is failing when any iteration failed regardless of thresholds', function () {
     $stats = [
         'connect_ms' => ['min' => 0, 'max' => 0, 'avg' => 0, 'p50' => 0, 'p95' => 0, 'p99' => 0],
         'request_ms' => ['min' => 0, 'max' => 0, 'avg' => 0, 'p50' => 0, 'p95' => 0, 'p99' => 0],
@@ -138,7 +138,7 @@ test('status is failing when any iteration failed regardless of budgets', functi
     expect($aggregate->status())->toBe('failing');
 });
 
-test('each sample is evaluated against the budgets', function () {
+test('each sample is evaluated against the thresholds', function () {
     $stats = [
         'connect_ms' => ['min' => 1.0, 'max' => 1.0, 'avg' => 1.0, 'p50' => 1.0, 'p95' => 1.0, 'p99' => 1.0],
         'request_ms' => ['min' => 2.0, 'max' => 2.0, 'avg' => 2.0, 'p50' => 2.0, 'p95' => 2.0, 'p99' => 2.0],

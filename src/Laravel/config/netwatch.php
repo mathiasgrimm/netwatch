@@ -46,7 +46,7 @@ return [
     | and contain a 'probe' instance implementing ProbeInterface.
     | Set the 'enabled' flag to true (via env) for the probes you want to use.
     |
-    | 'thresholds' are latency budgets in milliseconds, checked against the
+    | 'thresholds' are latency limits in milliseconds, checked against the
     | probe's total p95 on the dashboard (warn = amber, crit = red).
     | Set an env value to null/empty to disable that threshold.
     |

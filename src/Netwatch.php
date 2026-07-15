@@ -132,7 +132,7 @@ class Netwatch
     }
 
     /**
-     * Normalized latency budgets per enabled probe.
+     * Normalized latency thresholds per enabled probe.
      *
      * @return array<string, array{warn: float|null, crit: float|null}>
      */

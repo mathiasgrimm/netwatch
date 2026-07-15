@@ -150,7 +150,7 @@ test('HTML exposes latency thresholds from config', function () {
 
 test('HTML thresholds are null for custom probes without thresholds', function () {
     // The beforeEach probes define no thresholds key and their names have no
-    // package default to fall back to, so both budgets stay disabled.
+    // package default to fall back to, so both thresholds stay disabled.
     $content = $this->get('/netwatch/health?format=html')->getContent();
 
     expect($content)->toContain('"warn":null')
@@ -192,6 +192,19 @@ test('HTML includes the status summary element', function () {
     $content = $this->get('/netwatch/health?format=html')->getContent();
 
     expect($content)->toContain('id="status-summary"');
+});
+
+test('title carries the overall status dot', function () {
+    $content = $this->get('/netwatch/health?format=html')->getContent();
+
+    // Initial render is in the checking state (blue dot); JS updates it live.
+    expect($content)->toContain('<title>🔵 Netwatch Health Dashboard</title>');
+
+    config(['netwatch.probes' => []]);
+    $this->app->forgetInstance(Netwatch::class);
+
+    expect($this->get('/netwatch/health?format=html')->getContent())
+        ->toContain('<title>🟢 Netwatch Health Dashboard</title>');
 });
 
 test('JSON API includes status, thresholds and per-sample statuses', function () {

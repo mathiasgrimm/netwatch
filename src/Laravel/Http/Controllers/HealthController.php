@@ -33,7 +33,7 @@ class HealthController
                 }
             }
 
-            // Budgets resolved by the Netwatch singleton (provider applies
+            // Thresholds resolved by the Netwatch singleton (provider applies
             // package defaults for configs missing the thresholds key)
             $thresholds = array_intersect_key($netwatch->thresholds(), array_flip($selected));
 

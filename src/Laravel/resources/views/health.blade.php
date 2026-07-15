@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netwatch Health Dashboard</title>
+    @php
+        $statusDots = ['healthy' => '🟢', 'degraded' => '🟡', 'unhealthy' => '🔴', 'checking' => '🔵'];
+    @endphp
+    <title>{{ $statusDots[$overallStatus] ?? '' }} Netwatch Health Dashboard</title>
     @php
         $probeCount = count($probeNames);
         $probeNamesList = array_values($probeNames);
@@ -880,7 +883,7 @@
                 spark.appendChild(bar);
             });
 
-            // Dashed guides at the warn/crit budgets, when they fall inside the scale
+            // Dashed guides at the warn/crit thresholds, when they fall inside the scale
             var th = NETWATCH_THRESHOLDS[name] || null;
             if (th) {
                 ['warn', 'crit'].forEach(function (key) {
@@ -961,7 +964,7 @@
                     statValue.classList.add('stat-warn');
                 }
                 if (th && (th.warn !== null || th.crit !== null)) {
-                    statValue.title = 'Budget:'
+                    statValue.title = 'Thresholds:'
                         + (th.warn !== null ? ' warn ≥ ' + th.warn + ' ms' : '')
                         + (th.warn !== null && th.crit !== null ? ' ·' : '')
                         + (th.crit !== null ? ' crit ≥ ' + th.crit + ' ms' : '');
@@ -1024,11 +1027,38 @@
             }
         }
 
+        var STATUS_DOTS = { healthy: '🟢', degraded: '🟡', unhealthy: '🔴', checking: '🔵' };
+        var STATUS_COLORS = { healthy: '#34d399', degraded: '#fbbf24', unhealthy: '#f87171', checking: '#22d3ee' };
+
+        // Mirror the overall status in the browser tab: emoji dot in the
+        // title plus a matching dot favicon for narrow/pinned tabs.
+        function updateTabStatus(status) {
+            document.title = (STATUS_DOTS[status] ? STATUS_DOTS[status] + ' ' : '') + 'Netwatch Health Dashboard';
+
+            var color = STATUS_COLORS[status];
+            if (!color) return;
+            var canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 32;
+            var ctx = canvas.getContext('2d');
+            ctx.beginPath();
+            ctx.arc(16, 16, 10, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            var link = document.querySelector('link[rel="icon"]');
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = canvas.toDataURL('image/png');
+        }
+
         function setBadge(status) {
             var badge = document.getElementById('overall-badge');
             badge.className = 'badge badge-' + status;
             badge.querySelector('span:last-child').textContent = status;
             NETWATCH_META.status = status;
+            updateTabStatus(status);
         }
 
         function probeStatuses() {
@@ -1238,6 +1268,7 @@
                 checkedAtMs = new Date(NETWATCH_META.checkedAt).getTime();
             }
 
+            updateTabStatus(NETWATCH_META.status);
             runAll();
         })();
 

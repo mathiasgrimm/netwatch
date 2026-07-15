@@ -7,7 +7,7 @@ namespace Mathiasgrimm\Netwatch\Result;
 class AggregateResult
 {
     /**
-     * @param  array{warn: float|null, crit: float|null}|null  $thresholds  Latency budgets (ms) checked against total p95
+     * @param  array{warn: float|null, crit: float|null}|null  $thresholds  Latency thresholds (ms) checked against total p95
      */
     public function __construct(
         public readonly string $name,
@@ -20,7 +20,7 @@ class AggregateResult
 
     /**
      * Evaluate the probe outcome: 'failing' when any iteration failed,
-     * otherwise total p95 against the crit/warn budgets, 'ok' when neither
+     * otherwise total p95 against the crit/warn thresholds, 'ok' when neither
      * threshold is set or breached. Individual samples are evaluated
      * separately via sampleStatus()/overWarnCount()/overCritCount().
      */
@@ -46,7 +46,7 @@ class AggregateResult
     }
 
     /**
-     * Evaluate one iteration against the budgets.
+     * Evaluate one iteration against the thresholds.
      */
     public function sampleStatus(ProbeResult $result): string
     {
@@ -69,7 +69,7 @@ class AggregateResult
     }
 
     /**
-     * Successful iterations with total latency at or over the warn budget
+     * Successful iterations with total latency at or over the warn threshold
      * (includes those also over crit).
      */
     public function overWarnCount(): int
@@ -83,7 +83,7 @@ class AggregateResult
     }
 
     /**
-     * Successful iterations with total latency at or over the crit budget.
+     * Successful iterations with total latency at or over the crit threshold.
      */
     public function overCritCount(): int
     {

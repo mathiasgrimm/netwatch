@@ -52,7 +52,7 @@ use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
 return [
     'iterations' => 10,
 
-    // 'thresholds' are latency budgets in milliseconds, evaluated against the
+    // 'thresholds' are latency limits in milliseconds, evaluated against the
     // probe's total latency (p95 for the overall status, and per iteration).
     // Set a value to null to disable that threshold.
     'probes' => [
