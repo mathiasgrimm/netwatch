@@ -1384,6 +1384,7 @@
                 cyanHi: token('--cyan-hi'),
                 cyanLo: token('--cyan-lo'),
                 ok: token('--ok'),
+                warn: token('--warn'),
                 crit: token('--crit'),
                 surface: token('--surface-1'),
                 border: T.border,
@@ -1416,7 +1417,7 @@
                 return Number(v).toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             }
 
-            var statusColor = { healthy: C.ok, degraded: token('--warn'), unhealthy: C.crit };
+            var statusColor = { healthy: C.ok, degraded: C.warn, unhealthy: C.crit };
             var statusRgb = T.statusRgb;
 
             // background: gradient + faint cyan bloom, echoing the page body
@@ -1538,15 +1539,22 @@
             probeKeys.forEach(function (key) {
                 var p = data[key];
                 var failing = p.failures > 0;
+                // Same probe status the cards use: failing/crit/warn/ok.
+                var pStatus = p.status || (failing ? 'failing' : 'ok');
+                var pColor = pStatus === 'failing' || pStatus === 'crit' ? C.crit
+                    : pStatus === 'warn' ? C.warn
+                    : C.ok;
 
                 ctx.fillStyle = C.surface;
                 rr(PAD, y, W - PAD * 2, ROW_H, 12);
                 ctx.fill();
-                ctx.strokeStyle = failing ? 'rgba(248, 113, 113, 0.35)' : C.border;
+                ctx.strokeStyle = pStatus === 'failing' || pStatus === 'crit'
+                    ? 'rgba(' + statusRgb.unhealthy + ', 0.35)'
+                    : C.border;
                 ctx.lineWidth = 1;
                 ctx.stroke();
 
-                ctx.fillStyle = failing ? C.crit : C.ok;
+                ctx.fillStyle = pColor;
                 ctx.beginPath();
                 ctx.arc(PAD + 26, y + 36, 4, 0, Math.PI * 2);
                 ctx.fill();
@@ -1559,9 +1567,11 @@
 
                 var chip = failing
                     ? p.failures + (p.failures > 1 ? ' failures' : ' failure')
+                    : pStatus === 'crit' ? 'critical'
+                    : pStatus === 'warn' ? 'slow'
                     : (p.iterations - p.failures) + '/' + p.iterations + ' ok';
                 ctx.font = '600 11px ' + C.sans;
-                ctx.fillStyle = failing ? C.crit : C.ok;
+                ctx.fillStyle = pColor;
                 ctx.fillText(chip.toUpperCase(), PAD + 40 + keyW + 12, y + 40);
 
                 ctx.font = '12px ' + C.mono;
@@ -1583,8 +1593,30 @@
                     var barW = Math.max(2, Math.min(6, step - 2));
                     samples.forEach(function (r, idx) {
                         var barH = Math.max(3, (r.total_ms / maxTotal) * sh);
-                        ctx.fillStyle = r.success ? T.spark : C.crit;
+                        // Same per-sample status the dashboard sparkline uses.
+                        var st = r.status || (r.success ? 'ok' : 'failing');
+                        ctx.fillStyle = st === 'failing' || st === 'crit' ? C.crit
+                            : st === 'warn' ? C.warn
+                            : T.spark;
                         ctx.fillRect(sx + idx * step, sb - barH, barW, barH);
+                    });
+
+                    // Dashed guides at the warn/crit thresholds, like the dashboard
+                    var th = p.thresholds || {};
+                    ['warn', 'crit'].forEach(function (tKey) {
+                        var value = th[tKey];
+                        if (value === null || value === undefined || value > maxTotal) return;
+                        var ly = sb - (value / maxTotal) * sh;
+                        ctx.strokeStyle = tKey === 'crit' ? C.crit : C.warn;
+                        ctx.globalAlpha = 0.55;
+                        ctx.setLineDash([4, 4]);
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(sx, ly);
+                        ctx.lineTo(sx + sw, ly);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.globalAlpha = 1;
                     });
                 }
 
@@ -1614,7 +1646,10 @@
                         var cx = tableRight - (statCols.length - idx) * colW + colW / 2;
                         ctx.textAlign = 'center';
                         ctx.font = (isTotal ? '600' : '500') + ' 14px ' + C.sans;
-                        ctx.fillStyle = col.key === 'p95' ? C.cyan : (isTotal ? C.ink : C.ink2);
+                        // The total row's p95 drives the threshold status; tint it like the headline stat.
+                        ctx.fillStyle = col.key === 'p95'
+                            ? (isTotal && (pStatus === 'warn' || pStatus === 'crit') ? pColor : C.cyan)
+                            : (isTotal ? C.ink : C.ink2);
                         var value = fmtMs(stats[col.key]);
                         ctx.fillText(value === '—' ? value : value + ' ms', cx, ry);
                         ctx.textAlign = 'left';
