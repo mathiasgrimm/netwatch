@@ -7,6 +7,7 @@
         $statusDots = ['healthy' => '🟢', 'degraded' => '🟡', 'unhealthy' => '🔴', 'checking' => '🔵'];
     @endphp
     <title>{{ $statusDots[$overallStatus] ?? '' }} Netwatch Health Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1526'/%3E%3Cg transform='translate(2.6 7.4) scale(0.68)' fill='none' stroke='%2338e1f5' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12h7l2.5-7 4 14 3-9.5 1.8 2.5H27'/%3E%3C/g%3E%3Ccircle cx='23.7' cy='15.6' r='2' fill='%2338e1f5'/%3E%3Ccircle cx='23.7' cy='15.6' r='3.8' stroke='%2338e1f5' stroke-opacity='0.35' fill='none'/%3E%3C/svg%3E">
     @php
         $probeCount = count($probeNames);
         $probeNamesList = array_values($probeNames);
@@ -1028,29 +1029,11 @@
         }
 
         var STATUS_DOTS = { healthy: '🟢', degraded: '🟡', unhealthy: '🔴', checking: '🔵' };
-        var STATUS_COLORS = { healthy: '#34d399', degraded: '#fbbf24', unhealthy: '#f87171', checking: '#22d3ee' };
 
-        // Mirror the overall status in the browser tab: emoji dot in the
-        // title plus a matching dot favicon for narrow/pinned tabs.
+        // Mirror the overall status in the browser tab title; the favicon
+        // stays the Netwatch brand mark.
         function updateTabStatus(status) {
             document.title = (STATUS_DOTS[status] ? STATUS_DOTS[status] + ' ' : '') + 'Netwatch Health Dashboard';
-
-            var color = STATUS_COLORS[status];
-            if (!color) return;
-            var canvas = document.createElement('canvas');
-            canvas.width = canvas.height = 32;
-            var ctx = canvas.getContext('2d');
-            ctx.beginPath();
-            ctx.arc(16, 16, 10, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.fill();
-            var link = document.querySelector('link[rel="icon"]');
-            if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = canvas.toDataURL('image/png');
         }
 
         function setBadge(status) {

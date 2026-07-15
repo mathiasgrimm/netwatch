@@ -198,7 +198,9 @@ test('title carries the overall status dot', function () {
     $content = $this->get('/netwatch/health?format=html')->getContent();
 
     // Initial render is in the checking state (blue dot); JS updates it live.
-    expect($content)->toContain('<title>🔵 Netwatch Health Dashboard</title>');
+    // The favicon is the static Netwatch brand mark.
+    expect($content)->toContain('<title>🔵 Netwatch Health Dashboard</title>')
+        ->toContain('rel="icon" type="image/svg+xml"');
 
     config(['netwatch.probes' => []]);
     $this->app->forgetInstance(Netwatch::class);
