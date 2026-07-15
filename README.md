@@ -178,7 +178,7 @@ php artisan netwatch:run --json --without-results
 | `--json` | Output results as JSON instead of a table |
 | `--without-results` | Exclude individual iteration results from JSON output |
 
-![CLI Table Output](docs/cli.jpg)
+![CLI Table Output](docs/cli.avif)
 
 ### Health Dashboard
 
@@ -211,7 +211,7 @@ Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&
 
 **JSON API response** — append `?format=json` for a raw JSON endpoint:
 
-![Health Dashboard - JSON API Response](docs/dashboard-json-format.jpg)
+![Health Dashboard - JSON API Response](docs/dashboard-json-format.avif)
 
 ### Authorization
 
@@ -551,7 +551,7 @@ vendor/bin/netwatch netwatch:init [options]
 }
 ```
 
-![CLI JSON Output](docs/cli-json.jpg)
+![CLI JSON Output](docs/cli-json.avif)
 
 ## Statistical Analysis
 
