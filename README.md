@@ -208,26 +208,23 @@ The JSON API (`?format=json` or an `application/json` Accept header) is unaffect
 
 Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&without_results=1`
 
-**HTML view** - interactive dashboard with per-probe latency stats:
+**HTML view** - interactive dashboard with per-probe latency stats, in dark and light themes:
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.avif">
-  <img src="docs/dashboard-light.avif" alt="Health Dashboard">
-</picture>
+![Health Dashboard - dark theme](docs/dashboard-dark.avif)
+
+![Health Dashboard - light theme](docs/dashboard-light.avif)
 
 **Export image** - download a branded image summary of the current results (status, sparkline, and connect/request/total latency stats per probe) straight from the dashboard toolbar. Exports as WebP (~150 KB), falling back to PNG in browsers without WebP encoding:
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/export-image-dark.avif">
-  <img src="docs/export-image-light.avif" alt="Exported Health Summary Image">
-</picture>
+![Exported Health Summary Image - dark theme](docs/export-image-dark.avif)
+
+![Exported Health Summary Image - light theme](docs/export-image-light.avif)
 
 **JSON panel** - view raw JSON data directly within the dashboard:
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-json-dark.avif">
-  <img src="docs/dashboard-json-light.avif" alt="Health Dashboard - JSON Panel">
-</picture>
+![Health Dashboard JSON Panel - dark theme](docs/dashboard-json-dark.avif)
+
+![Health Dashboard JSON Panel - light theme](docs/dashboard-json-light.avif)
 
 **JSON API response** - append `?format=json` for a raw JSON endpoint:
 
