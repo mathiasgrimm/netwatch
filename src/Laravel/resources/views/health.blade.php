@@ -874,9 +874,9 @@
                 bar.className = 'spark-bar'
                     + (status === 'failing' ? ' spark-fail' : status === 'crit' ? ' spark-crit' : status === 'warn' ? ' spark-warn' : '');
                 bar.style.height = Math.max(8, Math.round(r.total_ms / maxTotal * 100)) + '%';
-                var when = r.at ? ' — ' + new Date(r.at).toLocaleTimeString() : '';
-                var suffix = status === 'failing' ? ' — failed' : status === 'crit' ? ' — ≥ crit' : status === 'warn' ? ' — ≥ warn' : '';
-                bar.setAttribute('data-tip', '#' + (r.seq || i + 1) + ' — ' + Number(r.total_ms).toFixed(2) + ' ms' + when + suffix);
+                var when = r.at ? ' · ' + new Date(r.at).toLocaleTimeString() : '';
+                var suffix = status === 'failing' ? ' · failed' : status === 'crit' ? ' · ≥ crit' : status === 'warn' ? ' · ≥ warn' : '';
+                bar.setAttribute('data-tip', '#' + (r.seq || i + 1) + ' · ' + Number(r.total_ms).toFixed(2) + ' ms' + when + suffix);
                 spark.appendChild(bar);
             });
 

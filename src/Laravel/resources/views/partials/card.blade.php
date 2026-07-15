@@ -43,15 +43,15 @@
                                 default => '',
                             };
                             $tipSuffix = match ($sampleStatus) {
-                                'failing' => ' — failed',
-                                'crit' => ' — ≥ crit',
-                                'warn' => ' — ≥ warn',
+                                'failing' => ' · failed',
+                                'crit' => ' · ≥ crit',
+                                'warn' => ' · ≥ warn',
                                 default => '',
                             };
                         @endphp
                         <span class="spark-bar{{ $barClass }}"
                               style="height: {{ max(8, round($iteration['total_ms'] / $maxTotal * 100)) }}%"
-                              data-tip="#{{ $i + 1 }} — {{ number_format($iteration['total_ms'], 2) }} ms{{ $tipSuffix }}"></span>
+                              data-tip="#{{ $i + 1 }} · {{ number_format($iteration['total_ms'], 2) }} ms{{ $tipSuffix }}"></span>
                     @endforeach
                 </div>
             @endif
