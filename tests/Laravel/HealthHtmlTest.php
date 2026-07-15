@@ -116,6 +116,18 @@ test('HTML shows probe stats table with metric labels', function () {
         ->toContain('P99');
 });
 
+test('HTML includes export image button and script', function () {
+    $response = $this->get('/netwatch/health?format=html');
+
+    $content = $response->getContent();
+    expect($content)
+        ->toContain('onclick="exportImage()"')
+        ->toContain('Export image')
+        ->toContain('function exportImage')
+        ->toContain('NETWATCH_META')
+        ->toContain("'image/webp'");
+});
+
 test('probes query parameter filters to only specified probes in JSON', function () {
     $this->get('/netwatch/health?probes=test-success', ['Accept' => 'application/json'])
         ->assertOk()

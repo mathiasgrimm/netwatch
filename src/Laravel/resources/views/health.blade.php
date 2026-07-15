@@ -8,6 +8,13 @@
         $fmt = fn (float $v) => number_format($v, $v < 10 ? 2 : ($v < 100 ? 1 : 0));
         $probeCount = count($results);
         $iterationCount = array_sum(array_map(fn ($r) => $r['iterations'], $results));
+        $netwatchMeta = [
+            'status' => $overallStatus,
+            'checkedAt' => $checkedAt,
+            'probeCount' => $probeCount,
+            'iterationCount' => $iterationCount,
+            'disabledProbes' => array_values($disabledProbes),
+        ];
     @endphp
     <style>
         :root {
@@ -417,6 +424,7 @@
                     <button class="btn active" id="btn-dashboard" aria-pressed="true" onclick="showView('dashboard')">Dashboard</button>
                     <button class="btn" id="btn-json" aria-pressed="false" onclick="showView('json')">JSON</button>
                 </div>
+                <button class="btn" onclick="exportImage()">Export image</button>
                 <button class="btn" onclick="location.reload()">Run again</button>
             </div>
         </div>
@@ -553,6 +561,8 @@
     </div>
 
     <script>
+        const NETWATCH_META = @json($netwatchMeta);
+
         function showView(view) {
             var dashboard = document.getElementById('view-dashboard');
             var json = document.getElementById('view-json');
@@ -596,15 +606,356 @@
             }
         }
 
-        function downloadJson() {
-            var text = document.getElementById('json-output').textContent;
-            var blob = new Blob([text], { type: 'application/json' });
+        function nwFilename(ext) {
+            return 'netwatch-health-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.' + ext;
+        }
+
+        function downloadBlob(blob, filename) {
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.href = url;
-            a.download = 'netwatch-health-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
+            a.download = filename;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        function downloadJson() {
+            var text = document.getElementById('json-output').textContent;
+            downloadBlob(new Blob([text], { type: 'application/json' }), nwFilename('json'));
+        }
+
+        function exportImage() {
+            var data = JSON.parse(document.getElementById('json-output').textContent);
+            var probeKeys = Object.keys(data);
+            var disabled = NETWATCH_META.disabledProbes || [];
+
+            var W = 1200;
+            var PAD = 48;
+            var HEADER_H = 120;
+            var ROW_H = 168;
+            var GAP = 16;
+            var FOOTER_H = 64;
+
+            var H = PAD + HEADER_H + FOOTER_H + probeKeys.length * (ROW_H + GAP);
+            if (probeKeys.length === 0 && disabled.length === 0) {
+                H += 156;
+            }
+            if (disabled.length > 0) {
+                H += 40 + disabled.length * 52;
+            }
+
+            var S = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
+            if (H * S > 16384) {
+                S = 1;
+            }
+
+            var canvas = document.createElement('canvas');
+            canvas.width = W * S;
+            canvas.height = H * S;
+            var ctx = canvas.getContext('2d');
+            ctx.scale(S, S);
+
+            var root = getComputedStyle(document.documentElement);
+            function token(name) {
+                return root.getPropertyValue(name).trim();
+            }
+
+            var C = {
+                ink: token('--ink'),
+                ink2: token('--ink-2'),
+                ink3: token('--ink-3'),
+                cyan: token('--cyan'),
+                cyanHi: token('--cyan-hi'),
+                cyanLo: token('--cyan-lo'),
+                ok: token('--ok'),
+                crit: token('--crit'),
+                surface: token('--surface-1'),
+                border: 'rgba(148, 170, 220, 0.18)',
+                sans: token('--sans'),
+                mono: token('--mono')
+            };
+
+            function rr(x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r);
+                ctx.arcTo(x, y, x + w, y, r);
+                ctx.closePath();
+            }
+
+            function truncate(text, maxWidth) {
+                text = String(text);
+                if (ctx.measureText(text).width <= maxWidth) return text;
+                while (text.length > 1 && ctx.measureText(text + '…').width > maxWidth) {
+                    text = text.slice(0, -1);
+                }
+                return text + '…';
+            }
+
+            function fmtMs(v) {
+                if (v === null || v === undefined || isNaN(v)) return '—';
+                var decimals = v < 10 ? 2 : (v < 100 ? 1 : 0);
+                return Number(v).toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+
+            var statusColor = { healthy: C.ok, degraded: token('--warn'), unhealthy: C.crit };
+            var statusRgb = { healthy: '52, 211, 153', degraded: '251, 191, 36', unhealthy: '248, 113, 113' };
+
+            // background: navy gradient + faint cyan bloom, echoing the page body
+            var bg = ctx.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, '#131a2b');
+            bg.addColorStop(1, '#0a0f1d');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, H);
+            var glow = ctx.createRadialGradient(W / 2, -100, 0, W / 2, -100, 700);
+            glow.addColorStop(0, 'rgba(34, 211, 238, 0.08)');
+            glow.addColorStop(1, 'rgba(34, 211, 238, 0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, W, Math.min(H, 420));
+
+            // brand mark: the header SVG pulse line redrawn at 1.5x
+            var mx = PAD, my = PAD + 4, k = 1.5;
+            var accent = ctx.createLinearGradient(mx, 0, mx + 40 * k, 0);
+            accent.addColorStop(0, C.cyanHi);
+            accent.addColorStop(1, C.cyanLo);
+            ctx.strokeStyle = accent;
+            ctx.lineWidth = 2 * k;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            var pts = [[1, 12], [8, 12], [10.5, 5], [14.5, 19], [17.5, 9.5], [19.3, 12], [27, 12]];
+            for (var i = 0; i < pts.length; i++) {
+                var px = mx + pts[i][0] * k;
+                var py = my + pts[i][1] * k;
+                if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); }
+            }
+            ctx.stroke();
+            ctx.fillStyle = C.cyanHi;
+            ctx.beginPath();
+            ctx.arc(mx + 31 * k, my + 12 * k, 2.4 * k, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(56, 225, 245, 0.35)';
+            ctx.lineWidth = k;
+            ctx.beginPath();
+            ctx.arc(mx + 31 * k, my + 12 * k, 4.6 * k, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // wordmark
+            var wx = mx + 40 * k + 16;
+            var wy = my + 12 * k + 9;
+            ctx.textBaseline = 'alphabetic';
+            ctx.font = '700 28px ' + C.sans;
+            ctx.fillStyle = C.ink;
+            ctx.fillText('Net', wx, wy);
+            var netW = ctx.measureText('Net').width;
+            var watchW = ctx.measureText('watch').width;
+            var wmGrad = ctx.createLinearGradient(wx + netW, 0, wx + netW + watchW, 0);
+            wmGrad.addColorStop(0, C.cyanHi);
+            wmGrad.addColorStop(1, C.cyanLo);
+            ctx.fillStyle = wmGrad;
+            ctx.fillText('watch', wx + netW, wy);
+            ctx.font = '600 11px ' + C.sans;
+            ctx.fillStyle = C.ink3;
+            ctx.fillText('H E A L T H', wx + netW + watchW + 14, wy);
+
+            // meta line
+            ctx.font = '12px ' + C.mono;
+            ctx.fillStyle = C.ink3;
+            ctx.fillText(
+                'Checked ' + NETWATCH_META.checkedAt
+                + ' · ' + NETWATCH_META.probeCount + (NETWATCH_META.probeCount === 1 ? ' probe' : ' probes')
+                + ' · ' + NETWATCH_META.iterationCount + (NETWATCH_META.iterationCount === 1 ? ' iteration' : ' iterations'),
+                wx, wy + 24
+            );
+
+            // status badge, right-aligned
+            var status = NETWATCH_META.status;
+            var srgb = statusRgb[status] || '124, 141, 176';
+            ctx.font = '600 12px ' + C.sans;
+            var label = status.toUpperCase();
+            var bw = ctx.measureText(label).width + 46;
+            var bx = W - PAD - bw;
+            var by = PAD + 8;
+            var bh = 32;
+            ctx.fillStyle = 'rgba(' + srgb + ', 0.10)';
+            rr(bx, by, bw, bh, bh / 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(' + srgb + ', 0.30)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fillStyle = statusColor[status] || C.ink3;
+            ctx.beginPath();
+            ctx.arc(bx + 17, by + bh / 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillText(label, bx + 28, by + bh / 2 + 4);
+
+            var y = PAD + HEADER_H;
+
+            if (probeKeys.length === 0 && disabled.length === 0) {
+                ctx.fillStyle = C.surface;
+                rr(PAD, y, W - PAD * 2, 140, 12);
+                ctx.fill();
+                ctx.strokeStyle = C.border;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.textAlign = 'center';
+                ctx.font = '600 18px ' + C.sans;
+                ctx.fillStyle = C.ink;
+                ctx.fillText('No probes configured', W / 2, y + 66);
+                ctx.font = '13px ' + C.sans;
+                ctx.fillStyle = C.ink3;
+                ctx.fillText('Add probes to config/netwatch.php to start monitoring latency.', W / 2, y + 92);
+                ctx.textAlign = 'left';
+                y += 156;
+            }
+
+            var statCols = [
+                { label: 'MIN', key: 'min' },
+                { label: 'AVG', key: 'avg' },
+                { label: 'P95', key: 'p95' },
+                { label: 'MAX', key: 'max' }
+            ];
+            var colW = 92;
+
+            probeKeys.forEach(function (key) {
+                var p = data[key];
+                var failing = p.failures > 0;
+
+                ctx.fillStyle = C.surface;
+                rr(PAD, y, W - PAD * 2, ROW_H, 12);
+                ctx.fill();
+                ctx.strokeStyle = failing ? 'rgba(248, 113, 113, 0.35)' : C.border;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = failing ? C.crit : C.ok;
+                ctx.beginPath();
+                ctx.arc(PAD + 26, y + 36, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.font = '600 16px ' + C.sans;
+                ctx.fillStyle = C.ink;
+                var keyText = truncate(key, 240);
+                ctx.fillText(keyText, PAD + 40, y + 41);
+                var keyW = ctx.measureText(keyText).width;
+
+                var chip = failing
+                    ? p.failures + (p.failures > 1 ? ' failures' : ' failure')
+                    : (p.iterations - p.failures) + '/' + p.iterations + ' ok';
+                ctx.font = '600 11px ' + C.sans;
+                ctx.fillStyle = failing ? C.crit : C.ok;
+                ctx.fillText(chip.toUpperCase(), PAD + 40 + keyW + 12, y + 40);
+
+                ctx.font = '12px ' + C.mono;
+                ctx.fillStyle = C.ink3;
+                ctx.fillText(truncate(p.name, 330), PAD + 40, y + 66);
+
+                if (Array.isArray(p.results) && p.results.length > 0) {
+                    var sx = PAD + 380;
+                    var sw = 200;
+                    var sh = 52;
+                    var sb = y + ROW_H / 2 + 26;
+                    var samples = p.results.slice(-40);
+                    var maxTotal = 0;
+                    samples.forEach(function (r) {
+                        if (r.total_ms > maxTotal) maxTotal = r.total_ms;
+                    });
+                    if (maxTotal <= 0) maxTotal = 1;
+                    var step = sw / samples.length;
+                    var barW = Math.max(2, Math.min(6, step - 2));
+                    samples.forEach(function (r, idx) {
+                        var barH = Math.max(3, (r.total_ms / maxTotal) * sh);
+                        ctx.fillStyle = r.success ? 'rgba(34, 211, 238, 0.75)' : C.crit;
+                        ctx.fillRect(sx + idx * step, sb - barH, barW, barH);
+                    });
+                }
+
+                var metricRows = [
+                    { label: 'Connect', key: 'connect_ms' },
+                    { label: 'Request', key: 'request_ms' },
+                    { label: 'Total', key: 'total_ms' }
+                ];
+                var tableRight = W - PAD - 20;
+                var labelX = tableRight - statCols.length * colW - 78;
+                statCols.forEach(function (col, idx) {
+                    var cx = tableRight - (statCols.length - idx) * colW + colW / 2;
+                    ctx.textAlign = 'center';
+                    ctx.font = '600 10px ' + C.sans;
+                    ctx.fillStyle = C.ink3;
+                    ctx.fillText(col.label, cx, y + 44);
+                    ctx.textAlign = 'left';
+                });
+                metricRows.forEach(function (row, rIdx) {
+                    var ry = y + 74 + rIdx * 30;
+                    var isTotal = row.key === 'total_ms';
+                    var stats = (p.stats && p.stats[row.key]) || {};
+                    ctx.font = (isTotal ? '600 ' : '') + '12px ' + C.sans;
+                    ctx.fillStyle = isTotal ? C.ink : C.ink3;
+                    ctx.fillText(row.label, labelX, ry);
+                    statCols.forEach(function (col, idx) {
+                        var cx = tableRight - (statCols.length - idx) * colW + colW / 2;
+                        ctx.textAlign = 'center';
+                        ctx.font = (isTotal ? '600' : '500') + ' 14px ' + C.sans;
+                        ctx.fillStyle = col.key === 'p95' ? C.cyan : (isTotal ? C.ink : C.ink2);
+                        var value = fmtMs(stats[col.key]);
+                        ctx.fillText(value === '—' ? value : value + ' ms', cx, ry);
+                        ctx.textAlign = 'left';
+                    });
+                });
+
+                y += ROW_H + GAP;
+            });
+
+            if (disabled.length > 0) {
+                ctx.font = '600 11px ' + C.sans;
+                ctx.fillStyle = C.ink3;
+                ctx.fillText('DISABLED PROBES', PAD, y + 24);
+                y += 40;
+                disabled.forEach(function (name) {
+                    ctx.fillStyle = 'rgba(13, 21, 38, 0.5)';
+                    rr(PAD, y, W - PAD * 2, 44, 10);
+                    ctx.fill();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = C.border;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = C.ink3;
+                    ctx.beginPath();
+                    ctx.arc(PAD + 26, y + 22, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.font = '600 14px ' + C.sans;
+                    ctx.fillStyle = C.ink2;
+                    ctx.fillText(truncate(name, 400), PAD + 40, y + 27);
+                    ctx.font = '600 11px ' + C.sans;
+                    ctx.fillStyle = C.ink3;
+                    ctx.textAlign = 'right';
+                    ctx.fillText('DISABLED', W - PAD - 20, y + 26);
+                    ctx.textAlign = 'left';
+                    y += 52;
+                });
+            }
+
+            ctx.font = '12px ' + C.sans;
+            ctx.fillStyle = C.ink3;
+            ctx.textAlign = 'center';
+            ctx.fillText('Powered by Netwatch · ' + NETWATCH_META.checkedAt, W / 2, H - 28);
+            ctx.textAlign = 'left';
+
+            // Browsers without WebP encoding (e.g. older Safari) silently fall
+            // back to PNG, so name the file from the blob's actual type.
+            canvas.toBlob(function (blob) {
+                if (blob) {
+                    downloadBlob(blob, nwFilename(blob.type === 'image/webp' ? 'webp' : 'png'));
+                } else {
+                    var a = document.createElement('a');
+                    a.href = canvas.toDataURL('image/png');
+                    a.download = nwFilename('png');
+                    a.click();
+                }
+            }, 'image/webp', 0.92);
         }
 
         (function () {

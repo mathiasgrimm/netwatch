@@ -205,6 +205,10 @@ Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&
 
 ![Health Dashboard](docs/dashboard.avif)
 
+**Export image** — download a branded image summary of the current results (status, sparkline, and connect/request/total latency stats per probe) straight from the dashboard toolbar. Exports as WebP (~150 KB), falling back to PNG in browsers without WebP encoding:
+
+![Exported Health Summary Image](docs/export-image.avif)
+
 **JSON panel** — view raw JSON data directly within the dashboard:
 
 ![Health Dashboard - JSON Panel](docs/dashboard-json.avif)
