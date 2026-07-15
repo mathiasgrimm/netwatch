@@ -35,8 +35,31 @@ class NetwatchServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(Netwatch::class, function () {
-            return Netwatch::fromArray(config('netwatch'));
+            $config = config('netwatch');
+            $config['probes'] = self::withDefaultThresholds($config['probes'] ?? []);
+
+            return Netwatch::fromArray($config);
         });
+    }
+
+    /**
+     * A probe config without a 'thresholds' key (e.g. a config file published
+     * before thresholds existed) falls back to the package defaults for that
+     * probe. A 'thresholds' key that is present but null is an explicit
+     * opt-out and disables the budget.
+     */
+    private static function withDefaultThresholds(array $probes): array
+    {
+        $defaults = null;
+
+        foreach ($probes as $name => $probe) {
+            if (! array_key_exists('thresholds', $probe)) {
+                $defaults ??= (require __DIR__.'/config/netwatch.php')['probes'] ?? [];
+                $probes[$name]['thresholds'] = $defaults[$name]['thresholds'] ?? null;
+            }
+        }
+
+        return $probes;
     }
 
     public function boot(): void

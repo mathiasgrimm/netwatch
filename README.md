@@ -174,6 +174,7 @@ php artisan netwatch:run --json --without-results
 | `--probe=NAME` | Run only a specific probe by name (e.g. `--probe=redis`) |
 | `--json` | Output results as JSON instead of a table |
 | `--without-results` | Exclude individual iteration results from JSON output |
+| `--fail-on-crit` | Exit non-zero when any probe fails or breaches its crit latency budget |
 
 ![CLI Table Output](docs/cli.avif)
 
@@ -192,7 +193,7 @@ The HTML dashboard renders instantly and loads each probe asynchronously: every 
 
 Cards accumulate results across refreshes: the sparkline grows run by run (thin separators mark each run, capped at the last 60 iterations), the stats table and headline p95 are computed over the full accumulated history, and the headline shows a p95 trend versus the previous run. When a run completes, cards re-sort by severity (failing first, then over-budget, then healthy) and the header shows a summary like `1 failing · 2 slow · 3 healthy`.
 
-**Latency budgets** — each probe has optional `warn`/`crit` thresholds in milliseconds, compared against its total p95: breaching `warn` turns the headline amber, `crit` turns it red. Defaults ship for the built-in probes (see Environment Variables below); set any threshold env to empty to disable it.
+**Latency budgets** — each probe has optional `warn`/`crit` thresholds in milliseconds. The probe-level status compares the budget against total p95 (breaching `warn` turns the headline amber, `crit` red), and every individual iteration is checked too: over-budget samples color their sparkline bars amber/red, dashed guide lines mark the budgets on the chart, and the JSON payload carries a status per sample plus `over_warn`/`over_crit` counts. Defaults ship for the built-in probes (see Environment Variables below); set any threshold env to empty to disable it. The same budgets drive the dashboard, the JSON API, and the CLI.
 
 The JSON API (`?format=json` or an `application/json` Accept header) is unaffected: it still runs all requested probes synchronously and returns the complete result set in one response.
 
@@ -205,6 +206,8 @@ The JSON API (`?format=json` or an `application/json` Accept header) is unaffect
 | `format` | `?format=json` | Force response format: `json` or `html`. Without this parameter, the format is determined by the `Accept` header (defaults to HTML for browsers). |
 | `probes` | `?probes=redis,database` | Comma-separated list of probe names to run. Only the specified probes are executed; others are skipped. |
 | `without_results` | `?without_results=1` | Exclude individual iteration results from the response, returning only aggregate stats. Useful for smaller payloads. |
+
+Each probe in the JSON response includes, alongside `stats`, `failures` and `results`: a `status` (`ok` / `warn` / `crit` / `failing`, evaluated from the latency budgets), the resolved `thresholds`, `over_warn`/`over_crit` sample counts, and a per-iteration `status` on every entry in `results`.
 
 Parameters can be combined: `/netwatch/health?probes=redis,database&format=json&without_results=1`
 
@@ -319,7 +322,12 @@ vendor/bin/netwatch netwatch:run --probe redis --iterations 20
 
 # JSON output
 vendor/bin/netwatch netwatch:run --json
+
+# Exit non-zero when any probe fails or breaches its crit budget (cron/CI)
+vendor/bin/netwatch netwatch:run --fail-on-crit
 ```
+
+The table shows a per-probe `Status` column and colors the total p95 against the probe's latency budget (amber over `warn`, red over `crit`) — the same budgets the dashboard and JSON API use. `netwatch:run` inside Laravel (artisan) supports the same options.
 
 ### Programmatic
 
@@ -554,14 +562,16 @@ vendor/bin/netwatch netwatch:init [options]
 ### Table Output (default)
 
 ```
-+--------+------------+----------+---------+----------+----------+----------+----------+----------+----------+
-| Probe  | Iterations | Failures | Metric  | Min (ms) | Max (ms) | Avg (ms) | P50 (ms) | P95 (ms) | P99 (ms) |
-+--------+------------+----------+---------+----------+----------+----------+----------+----------+----------+
-| redis  | 10         | 0        | connect | 0.312    | 0.891    | 0.523    | 0.487    | 0.856    | 0.884    |
-|        |            |          | request | 0.098    | 0.234    | 0.142    | 0.131    | 0.221    | 0.231    |
-|        |            |          | total   | 0.421    | 1.102    | 0.665    | 0.618    | 1.054    | 1.092    |
-+--------+------------+----------+---------+----------+----------+----------+----------+----------+----------+
++--------+--------+------------+----------+---------+----------+----------+----------+----------+----------+----------+
+| Probe  | Status | Iterations | Failures | Metric  | Min (ms) | Max (ms) | Avg (ms) | P50 (ms) | P95 (ms) | P99 (ms) |
++--------+--------+------------+----------+---------+----------+----------+----------+----------+----------+----------+
+| redis  | ok     | 10         | 0        | connect | 0.312    | 0.891    | 0.523    | 0.487    | 0.856    | 0.884    |
+|        |        |            |          | request | 0.098    | 0.234    | 0.142    | 0.131    | 0.221    | 0.231    |
+|        |        |            |          | total   | 0.421    | 1.102    | 0.665    | 0.618    | 1.054    | 1.092    |
++--------+--------+------------+----------+---------+----------+----------+----------+----------+----------+----------+
 ```
+
+The `Status` column and the total P95 cell are colored against the probe's latency budget: green/plain when within budget, amber at `warn`, red at `crit` or when iterations fail.
 
 ### JSON Output
 
@@ -576,10 +586,18 @@ vendor/bin/netwatch netwatch:init [options]
       "total_ms":   { "min": 0.421, "max": 1.102, "avg": 0.665, "p50": 0.618, "p95": 1.054, "p99": 1.092 }
     },
     "failures": 0,
-    "results": [ ... ]
+    "status": "ok",
+    "thresholds": { "warn": 5, "crit": 25 },
+    "over_warn": 0,
+    "over_crit": 0,
+    "results": [
+      { "connect_ms": 0.312, "request_ms": 0.098, "total_ms": 0.421, "success": true, "error": null, "status": "ok" }
+    ]
   }
 }
 ```
+
+`status` is `ok` / `warn` / `crit` (total p95 vs the budgets) or `failing` (any iteration failed). Every entry in `results` also carries its own per-iteration `status`, and `over_warn`/`over_crit` count the samples at or over each budget.
 
 ![CLI JSON Output](docs/cli-json.avif)
 

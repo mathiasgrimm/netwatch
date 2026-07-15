@@ -34,15 +34,38 @@ class Netwatch
         static::$resolveProbesUsing = $callback;
     }
 
+    /** @var array<string, array{probe: ProbeInterface, iterations?: int, thresholds: array{warn: float|null, crit: float|null}}> */
+    private readonly array $probes;
+
     /**
-     * @param  array<string, array{probe: ProbeInterface, iterations?: int}>  $probes
+     * @param  array<string, array{probe: ProbeInterface, iterations?: int, thresholds?: array{warn?: float|null, crit?: float|null}|null}>  $probes
      */
     public function __construct(
-        private readonly array $probes,
+        array $probes,
         private readonly int $defaultIterations = 10,
     ) {
         self::ensureProbeContract($probes);
+
+        foreach ($probes as $name => $probe) {
+            $probes[$name]['thresholds'] = self::normalizeThresholds($probe['thresholds'] ?? null);
+        }
+
+        $this->probes = $probes;
         $this->runner = new Runner;
+    }
+
+    /**
+     * @return array{warn: float|null, crit: float|null}
+     */
+    private static function normalizeThresholds(?array $thresholds): array
+    {
+        $warn = $thresholds['warn'] ?? null;
+        $crit = $thresholds['crit'] ?? null;
+
+        return [
+            'warn' => is_numeric($warn) ? (float) $warn : null,
+            'crit' => is_numeric($crit) ? (float) $crit : null,
+        ];
     }
 
     public static function fromConfig(string $configPath): self
@@ -102,10 +125,20 @@ class Netwatch
             $probe = $config['probe'];
             $count = $iterations ?? ($config['iterations'] ?? $this->defaultIterations);
 
-            $results[$name] = $this->runner->run($probe, $count);
+            $results[$name] = $this->runner->run($probe, $count, thresholds: $config['thresholds']);
         }
 
         return $results;
+    }
+
+    /**
+     * Normalized latency budgets per enabled probe.
+     *
+     * @return array<string, array{warn: float|null, crit: float|null}>
+     */
+    public function thresholds(): array
+    {
+        return array_map(fn (array $config) => $config['thresholds'], $this->probes);
     }
 
     /**

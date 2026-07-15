@@ -52,23 +52,38 @@ use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
 return [
     'iterations' => 10,
 
+    // 'thresholds' are latency budgets in milliseconds, evaluated against the
+    // probe's total latency (p95 for the overall status, and per iteration).
+    // Set a value to null to disable that threshold.
     'probes' => [
         'redis' => [
+            'enabled' => true,
+            'thresholds' => ['warn' => 5, 'crit' => 25],
             'probe' => new PhpRedisProbe('tcp://127.0.0.1:6379'),
         ],
         'mysql' => [
+            'enabled' => true,
+            'thresholds' => ['warn' => 10, 'crit' => 25],
             'probe' => new PdoProbe('mysql:host=127.0.0.1;port=3306', 'root', ''),
         ],
         'pgsql' => [
+            'enabled' => true,
+            'thresholds' => ['warn' => 10, 'crit' => 25],
             'probe' => new PdoProbe('pgsql:host=127.0.0.1;port=5432;dbname=postgres', 'postgres', ''),
         ],
         'laravel' => [
+            'enabled' => true,
+            'thresholds' => ['warn' => 300, 'crit' => 1000],
             'probe' => new HttpProbe('https://laravel.com'),
         ],
         'cloudflare' => [
+            'enabled' => true,
+            'thresholds' => ['warn' => 25, 'crit' => 50],
             'probe' => new TcpPingProbe('1.1.1.1', 443),
         ],
         'google-dns' => [
+            'enabled' => true,
+            'thresholds' => ['warn' => 25, 'crit' => 50],
             'probe' => new TcpPingProbe('8.8.8.8', 443),
         ],
     ],

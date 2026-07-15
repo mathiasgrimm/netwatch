@@ -90,3 +90,77 @@ test('toArray includes failures', function () {
         ->and($array['results'][0]['success'])->toBeFalse()
         ->and($array['results'][0]['error'])->toBe('fail 1');
 });
+
+test('status is ok without thresholds or failures', function () {
+    $stats = [
+        'connect_ms' => ['min' => 1.0, 'max' => 1.0, 'avg' => 1.0, 'p50' => 1.0, 'p95' => 1.0, 'p99' => 1.0],
+        'request_ms' => ['min' => 2.0, 'max' => 2.0, 'avg' => 2.0, 'p50' => 2.0, 'p95' => 2.0, 'p99' => 2.0],
+        'total_ms' => ['min' => 3.0, 'max' => 3.0, 'avg' => 3.0, 'p50' => 3.0, 'p95' => 3.0, 'p99' => 3.0],
+    ];
+
+    $aggregate = new AggregateResult('test', 1, $stats, 0, [new ProbeResult(1.0, 2.0, 3.0, true)]);
+
+    expect($aggregate->status())->toBe('ok')
+        ->and($aggregate->toArray()['status'])->toBe('ok')
+        ->and($aggregate->toArray()['thresholds'])->toBe(['warn' => null, 'crit' => null]);
+});
+
+test('status evaluates total p95 against warn and crit budgets', function () {
+    $stats = [
+        'connect_ms' => ['min' => 1.0, 'max' => 1.0, 'avg' => 1.0, 'p50' => 1.0, 'p95' => 1.0, 'p99' => 1.0],
+        'request_ms' => ['min' => 2.0, 'max' => 2.0, 'avg' => 2.0, 'p50' => 2.0, 'p95' => 2.0, 'p99' => 2.0],
+        'total_ms' => ['min' => 3.0, 'max' => 3.0, 'avg' => 3.0, 'p50' => 3.0, 'p95' => 3.0, 'p99' => 3.0],
+    ];
+    $results = [new ProbeResult(1.0, 2.0, 3.0, true)];
+
+    $ok = new AggregateResult('t', 1, $stats, 0, $results, ['warn' => 5.0, 'crit' => 10.0]);
+    $warn = new AggregateResult('t', 1, $stats, 0, $results, ['warn' => 3.0, 'crit' => 10.0]);
+    $crit = new AggregateResult('t', 1, $stats, 0, $results, ['warn' => 1.0, 'crit' => 3.0]);
+    $warnOnly = new AggregateResult('t', 1, $stats, 0, $results, ['warn' => 2.0, 'crit' => null]);
+
+    expect($ok->status())->toBe('ok')
+        ->and($warn->status())->toBe('warn')
+        ->and($crit->status())->toBe('crit')
+        ->and($warnOnly->status())->toBe('warn');
+});
+
+test('status is failing when any iteration failed regardless of budgets', function () {
+    $stats = [
+        'connect_ms' => ['min' => 0, 'max' => 0, 'avg' => 0, 'p50' => 0, 'p95' => 0, 'p99' => 0],
+        'request_ms' => ['min' => 0, 'max' => 0, 'avg' => 0, 'p50' => 0, 'p95' => 0, 'p99' => 0],
+        'total_ms' => ['min' => 0, 'max' => 0, 'avg' => 0, 'p50' => 0, 'p95' => 0, 'p99' => 0],
+    ];
+
+    $aggregate = new AggregateResult('t', 1, $stats, 1, [
+        new ProbeResult(0.0, 0.0, 0.0, false, 'boom'),
+    ], ['warn' => 100.0, 'crit' => 200.0]);
+
+    expect($aggregate->status())->toBe('failing');
+});
+
+test('each sample is evaluated against the budgets', function () {
+    $stats = [
+        'connect_ms' => ['min' => 1.0, 'max' => 1.0, 'avg' => 1.0, 'p50' => 1.0, 'p95' => 1.0, 'p99' => 1.0],
+        'request_ms' => ['min' => 2.0, 'max' => 2.0, 'avg' => 2.0, 'p50' => 2.0, 'p95' => 2.0, 'p99' => 2.0],
+        'total_ms' => ['min' => 2.0, 'max' => 12.0, 'avg' => 6.3, 'p50' => 5.0, 'p95' => 12.0, 'p99' => 12.0],
+    ];
+    $results = [
+        new ProbeResult(1.0, 1.0, 2.0, true),           // ok
+        new ProbeResult(1.0, 4.0, 5.0, true),           // >= warn
+        new ProbeResult(1.0, 11.0, 12.0, true),         // >= crit
+        new ProbeResult(0.0, 0.0, 0.0, false, 'boom'),  // failing
+    ];
+
+    $aggregate = new AggregateResult('t', 4, $stats, 1, $results, ['warn' => 5.0, 'crit' => 10.0]);
+    $array = $aggregate->toArray();
+
+    expect($aggregate->sampleStatus($results[0]))->toBe('ok')
+        ->and($aggregate->sampleStatus($results[1]))->toBe('warn')
+        ->and($aggregate->sampleStatus($results[2]))->toBe('crit')
+        ->and($aggregate->sampleStatus($results[3]))->toBe('failing')
+        ->and($aggregate->overWarnCount())->toBe(2)
+        ->and($aggregate->overCritCount())->toBe(1)
+        ->and($array['over_warn'])->toBe(2)
+        ->and($array['over_crit'])->toBe(1)
+        ->and(array_column($array['results'], 'status'))->toBe(['ok', 'warn', 'crit', 'failing']);
+});

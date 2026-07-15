@@ -1,15 +1,22 @@
 @php
     $fmt = fn (float $v) => number_format($v, $v < 10 ? 2 : ($v < 100 ? 1 : 0));
     $failing = $result['failures'] > 0;
+    $status = $result['status'] ?? ($failing ? 'failing' : 'ok');
+    [$dotClass, $badgeClass, $badgeText] = match ($status) {
+        'failing' => ['probe-dot-crit', 'badge-failures', $result['failures'].' failure'.($result['failures'] > 1 ? 's' : '')],
+        'crit' => ['probe-dot-crit', 'badge-unhealthy', 'critical'],
+        'warn' => ['probe-dot-warn', 'badge-degraded', 'slow'],
+        default => ['probe-dot-ok', 'badge-healthy', 'healthy'],
+    };
 @endphp
-<div class="card{{ $failing ? ' card-failing' : '' }}" data-probe="{{ $name }}">
+<div class="card{{ in_array($status, ['failing', 'crit'], true) ? ' card-failing' : '' }}" data-probe="{{ $name }}">
     <div class="card-header">
         <div>
             <div class="probe-title">
-                <span class="probe-dot {{ $failing ? 'probe-dot-crit' : 'probe-dot-ok' }}"></span>
+                <span class="probe-dot {{ $dotClass }}"></span>
                 <h2>{{ $name }}</h2>
-                <span class="badge badge-{{ $failing ? 'failures' : 'healthy' }}">
-                    <span>{{ $failing ? $result['failures'] . ' failure' . ($result['failures'] > 1 ? 's' : '') : 'healthy' }}</span>
+                <span class="badge {{ $badgeClass }}" data-probe-badge>
+                    <span>{{ $badgeText }}</span>
                 </span>
             </div>
             <div class="probe-name">{{ $result['name'] }}</div>
@@ -27,9 +34,24 @@
                 @php $maxTotal = max(array_map(fn ($r) => $r['total_ms'], $result['results'])) ?: 1; @endphp
                 <div class="spark" aria-hidden="true">
                     @foreach ($result['results'] as $i => $iteration)
-                        <span class="spark-bar{{ $iteration['success'] ? '' : ' spark-fail' }}"
+                        @php
+                            $sampleStatus = $iteration['status'] ?? ($iteration['success'] ? 'ok' : 'failing');
+                            $barClass = match ($sampleStatus) {
+                                'failing' => ' spark-fail',
+                                'crit' => ' spark-crit',
+                                'warn' => ' spark-warn',
+                                default => '',
+                            };
+                            $tipSuffix = match ($sampleStatus) {
+                                'failing' => ' — failed',
+                                'crit' => ' — ≥ crit',
+                                'warn' => ' — ≥ warn',
+                                default => '',
+                            };
+                        @endphp
+                        <span class="spark-bar{{ $barClass }}"
                               style="height: {{ max(8, round($iteration['total_ms'] / $maxTotal * 100)) }}%"
-                              data-tip="#{{ $i + 1 }} — {{ number_format($iteration['total_ms'], 2) }} ms{{ $iteration['success'] ? '' : ' — failed' }}"></span>
+                              data-tip="#{{ $i + 1 }} — {{ number_format($iteration['total_ms'], 2) }} ms{{ $tipSuffix }}"></span>
                     @endforeach
                 </div>
             @endif

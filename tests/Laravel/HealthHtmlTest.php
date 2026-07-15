@@ -194,6 +194,32 @@ test('HTML includes the status summary element', function () {
     expect($content)->toContain('id="status-summary"');
 });
 
+test('JSON API includes status, thresholds and per-sample statuses', function () {
+    config([
+        'netwatch.probes' => [
+            // SuccessProbe totals 3.0 ms; warn 2.5 puts it over warn only
+            'test-success' => [
+                'enabled' => true,
+                'probe' => new SuccessProbe,
+                'thresholds' => ['warn' => 2.5, 'crit' => 10],
+            ],
+            'test-failing' => ['enabled' => true, 'probe' => new FailingProbe, 'thresholds' => null],
+        ],
+    ]);
+    $this->app->forgetInstance(Netwatch::class);
+
+    $this->get('/netwatch/health?format=json')
+        ->assertOk()
+        ->assertJsonPath('test-success.status', 'warn')
+        ->assertJsonPath('test-success.thresholds.warn', 2.5)
+        ->assertJsonPath('test-success.thresholds.crit', 10)
+        ->assertJsonPath('test-success.over_warn', 2)
+        ->assertJsonPath('test-success.over_crit', 0)
+        ->assertJsonPath('test-success.results.0.status', 'warn')
+        ->assertJsonPath('test-failing.status', 'failing')
+        ->assertJsonPath('test-failing.thresholds.warn', null);
+});
+
 test('HTML includes export image button and script', function () {
     $response = $this->get('/netwatch/health?format=html');
 

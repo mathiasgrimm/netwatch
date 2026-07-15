@@ -279,6 +279,7 @@
             }
         }
         .probe-dot-pending { background: var(--cyan); }
+        .probe-dot-warn { background: var(--warn); }
         tr.row-detail { display: none; }
         .metrics-open tr.row-detail { display: table-row; }
         .metrics-toggle {
@@ -382,6 +383,7 @@
             margin-top: 0.15rem;
         }
         .spark {
+            position: relative;
             display: flex;
             align-items: flex-end;
             gap: 2px;
@@ -390,6 +392,15 @@
             flex: 1;
             min-width: 120px;
         }
+        .spark-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-top: 1px dashed;
+            pointer-events: none;
+        }
+        .spark-line-warn { border-color: var(--warn); opacity: 0.55; }
+        .spark-line-crit { border-color: var(--crit); opacity: 0.55; }
         .spark-bar {
             flex: 0 1 8px;
             min-width: 2px;
@@ -399,6 +410,8 @@
         }
         .spark-bar:hover { opacity: 1; }
         .spark-fail { background: var(--crit); }
+        .spark-warn { background: var(--warn); }
+        .spark-crit { background: var(--crit); }
         .spark-tip {
             display: none;
             position: fixed;
@@ -549,6 +562,9 @@
         ::-webkit-scrollbar-track { background: transparent; }
 
         .footer { text-align: center; margin-top: 2.5rem; font-size: 0.75rem; color: var(--ink-3); }
+        .footer a { color: var(--ink-2); text-decoration: none; }
+        .footer a:hover { color: var(--cyan); }
+        .footer .heart { color: var(--crit); }
         .dashboard-view {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
@@ -678,7 +694,7 @@
             </div>
         </div>
 
-        <div class="footer">Powered by Netwatch</div>
+        <div class="footer">Powered by Netwatch · Made with <span class="heart">♥</span> by <a href="https://mathiasgrimm.com" target="_blank" rel="noopener">Mathias Grimm</a></div>
     </div>
 
     <script>
@@ -853,13 +869,29 @@
                     sep.className = 'spark-sep';
                     spark.appendChild(sep);
                 }
+                var status = r.status || (r.success ? 'ok' : 'failing');
                 var bar = document.createElement('span');
-                bar.className = 'spark-bar' + (r.success ? '' : ' spark-fail');
+                bar.className = 'spark-bar'
+                    + (status === 'failing' ? ' spark-fail' : status === 'crit' ? ' spark-crit' : status === 'warn' ? ' spark-warn' : '');
                 bar.style.height = Math.max(8, Math.round(r.total_ms / maxTotal * 100)) + '%';
                 var when = r.at ? ' — ' + new Date(r.at).toLocaleTimeString() : '';
-                bar.setAttribute('data-tip', '#' + (r.seq || i + 1) + ' — ' + Number(r.total_ms).toFixed(2) + ' ms' + when + (r.success ? '' : ' — failed'));
+                var suffix = status === 'failing' ? ' — failed' : status === 'crit' ? ' — ≥ crit' : status === 'warn' ? ' — ≥ warn' : '';
+                bar.setAttribute('data-tip', '#' + (r.seq || i + 1) + ' — ' + Number(r.total_ms).toFixed(2) + ' ms' + when + suffix);
                 spark.appendChild(bar);
             });
+
+            // Dashed guides at the warn/crit budgets, when they fall inside the scale
+            var th = NETWATCH_THRESHOLDS[name] || null;
+            if (th) {
+                ['warn', 'crit'].forEach(function (key) {
+                    var value = th[key];
+                    if (value === null || value === undefined || value > maxTotal) return;
+                    var line = document.createElement('span');
+                    line.className = 'spark-line spark-line-' + key;
+                    line.style.bottom = Math.min(100, Math.round(value / maxTotal * 100)) + '%';
+                    spark.appendChild(line);
+                });
+            }
         }
 
         function nwNumber(v, decimals) {
@@ -935,6 +967,30 @@
                         + (th.crit !== null ? ' crit ≥ ' + th.crit + ' ms' : '');
                 }
             }
+            // Badge, dot and border follow the history-based status too;
+            // a failures badge from the latest run keeps priority.
+            var latest = collected[name];
+            if (latest && latest.failures === 0) {
+                var cardStatus = th && th.crit !== null && total.p95 >= th.crit ? 'crit'
+                    : th && th.warn !== null && total.p95 >= th.warn ? 'warn'
+                    : 'ok';
+                var badge = card.querySelector('[data-probe-badge]');
+                if (badge) {
+                    badge.className = 'badge '
+                        + (cardStatus === 'crit' ? 'badge-unhealthy' : cardStatus === 'warn' ? 'badge-degraded' : 'badge-healthy');
+                    var badgeLabel = badge.querySelector('span');
+                    if (badgeLabel) {
+                        badgeLabel.textContent = cardStatus === 'crit' ? 'critical' : cardStatus === 'warn' ? 'slow' : 'healthy';
+                    }
+                }
+                var dot = card.querySelector('.probe-dot');
+                if (dot) {
+                    dot.className = 'probe-dot '
+                        + (cardStatus === 'crit' ? 'probe-dot-crit' : cardStatus === 'warn' ? 'probe-dot-warn' : 'probe-dot-ok');
+                }
+                card.classList.toggle('card-failing', cardStatus === 'crit');
+            }
+
             var statContext = card.querySelector('.stat-context');
             if (statContext) {
                 statContext.textContent = 'p50 ' + fmtStat(total.p50) + ' · avg ' + fmtStat(total.avg);
@@ -991,24 +1047,28 @@
             return statuses;
         }
 
-        function updateSummary(statuses) {
+        function countStatuses(statuses) {
+            var counts = { error: 0, failing: 0, crit: 0, warn: 0, ok: 0, pending: 0 };
+            NETWATCH_PROBES.forEach(function (name) { counts[statuses[name]]++; });
+            return counts;
+        }
+
+        function updateSummary(counts) {
             var el = document.getElementById('status-summary');
             var total = NETWATCH_PROBES.length;
             if (total === 0) {
                 el.textContent = '';
                 return;
             }
-            var counts = { error: 0, failing: 0, crit: 0, warn: 0, ok: 0, pending: 0 };
-            NETWATCH_PROBES.forEach(function (name) { counts[statuses[name]]++; });
             if (pendingCount > 0) {
                 el.textContent = (total - counts.pending) + '/' + total + ' checked';
                 return;
             }
             var failing = counts.error + counts.failing;
-            var slow = counts.crit + counts.warn;
             var parts = [];
             if (failing > 0) parts.push(failing + ' failing');
-            if (slow > 0) parts.push(slow + ' slow');
+            if (counts.crit > 0) parts.push(counts.crit + ' critical');
+            if (counts.warn > 0) parts.push(counts.warn + ' slow');
             parts.push(counts.ok + ' healthy');
             el.textContent = parts.join(' · ');
         }
@@ -1043,23 +1103,12 @@
         function sync() {
             var json = {};
             var iterations = 0;
-            var probesWithFailures = 0;
-            var totalFailures = 0;
 
             NETWATCH_PROBES.forEach(function (name) {
-                if (fetchErrors[name]) {
-                    probesWithFailures++;
-                    totalFailures++;
-                    return;
-                }
                 var result = collected[name];
-                if (!result) return;
+                if (fetchErrors[name] || !result) return;
                 json[name] = result;
                 iterations += result.iterations;
-                totalFailures += result.failures;
-                if (result.failures > 0) {
-                    probesWithFailures++;
-                }
             });
 
             document.getElementById('json-output').textContent = JSON.stringify(json, null, 4);
@@ -1068,18 +1117,24 @@
             NETWATCH_META.iterationCount = iterations;
 
             var statuses = probeStatuses();
-            updateSummary(statuses);
+            var counts = countStatuses(statuses);
+            var failing = counts.error + counts.failing;
+            updateSummary(counts);
 
             var total = NETWATCH_PROBES.length;
             if (pendingCount > 0) {
-                setBadge(totalFailures === 0 ? 'checking' : 'degraded');
+                setBadge(failing + counts.crit === 0 ? 'checking' : 'degraded');
                 return;
             }
 
-            if (total === 0 || totalFailures === 0) {
+            if (total === 0) {
                 setBadge('healthy');
+            } else if (failing === total) {
+                setBadge('unhealthy');
+            } else if (failing > 0 || counts.crit > 0) {
+                setBadge('degraded');
             } else {
-                setBadge(probesWithFailures === total ? 'unhealthy' : 'degraded');
+                setBadge('healthy');
             }
 
             if (total > 0) {

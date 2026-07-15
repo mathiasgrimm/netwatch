@@ -58,6 +58,29 @@ test('html fragment contains the card markup', function () {
         ->toContain('row-total');
 });
 
+test('crit breach renders critical badge instead of healthy', function () {
+    config([
+        'netwatch.probes' => [
+            // SuccessProbe totals 3.0 ms; crit 2 puts it over budget
+            'test-success' => [
+                'enabled' => true,
+                'probe' => new SuccessProbe,
+                'thresholds' => ['warn' => 1, 'crit' => 2],
+            ],
+        ],
+    ]);
+    $this->app->forgetInstance(Netwatch::class);
+
+    $response = $this->get('/netwatch/health/probes/test-success');
+
+    $response->assertOk()->assertJsonPath('result.status', 'crit');
+    expect($response->json('html'))
+        ->toContain('badge-unhealthy')
+        ->toContain('critical')
+        ->toContain('card-failing')
+        ->not->toContain('badge-healthy');
+});
+
 test('failing probe fragment renders failure card', function () {
     $response = $this->get('/netwatch/health/probes/test-failing');
 

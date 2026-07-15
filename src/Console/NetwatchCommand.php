@@ -29,7 +29,8 @@ class NetwatchCommand extends Command
             ->addOption('probe', 'p', InputOption::VALUE_REQUIRED, 'Run only a specific probe by name')
             ->addOption('sequential', null, InputOption::VALUE_NONE, 'Run probes sequentially instead of in parallel')
             ->addOption('json', null, InputOption::VALUE_NONE, 'Output results as JSON')
-            ->addOption('without-results', null, InputOption::VALUE_NONE, 'Exclude individual iteration results from JSON output');
+            ->addOption('without-results', null, InputOption::VALUE_NONE, 'Exclude individual iteration results from JSON output')
+            ->addOption('fail-on-crit', null, InputOption::VALUE_NONE, 'Exit non-zero when any probe fails or breaches its crit latency budget');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -40,9 +41,10 @@ class NetwatchCommand extends Command
         $jsonOutput = $input->getOption('json');
         $sequential = $input->getOption('sequential');
         $withoutResults = $input->getOption('without-results');
+        $failOnCrit = $input->getOption('fail-on-crit');
 
         if (! $sequential && ! $probeName) {
-            return $this->executeParallel($input, $output, $configPath, $iterations, $jsonOutput, $withoutResults);
+            return $this->executeParallel($input, $output, $configPath, $iterations, $jsonOutput, $withoutResults, $failOnCrit);
         }
 
         try {
@@ -54,7 +56,7 @@ class NetwatchCommand extends Command
             return Command::FAILURE;
         }
 
-        return $this->outputResults($output, $results, $jsonOutput, $withoutResults);
+        return $this->outputResults($output, $results, $jsonOutput, $withoutResults, $failOnCrit);
     }
 
     private function resolveNetwatch(string $configPath): Netwatch
@@ -74,6 +76,7 @@ class NetwatchCommand extends Command
         ?int $iterations,
         bool $jsonOutput,
         bool $withoutResults = false,
+        bool $failOnCrit = false,
     ): int {
         // Resolve absolute config path for subprocesses
         if (! str_starts_with($configPath, '/')) {
@@ -134,6 +137,7 @@ class NetwatchCommand extends Command
                     stats: $probeData['stats'],
                     failures: $probeData['failures'],
                     results: [],
+                    thresholds: $probeData['thresholds'] ?? null,
                 );
             }
         }
@@ -148,22 +152,28 @@ class NetwatchCommand extends Command
             return Command::FAILURE;
         }
 
-        return $this->outputResults($output, $results, $jsonOutput, $withoutResults);
+        return $this->outputResults($output, $results, $jsonOutput, $withoutResults, $failOnCrit);
     }
 
     /**
      * @param  array<string, AggregateResult>  $results
      */
-    private function outputResults(OutputInterface $output, array $results, bool $jsonOutput, bool $withoutResults = false): int
+    private function outputResults(OutputInterface $output, array $results, bool $jsonOutput, bool $withoutResults = false, bool $failOnCrit = false): int
     {
         if ($jsonOutput) {
             $data = array_map(fn (AggregateResult $r) => $r->toArray($withoutResults), $results);
             $output->writeln(json_encode($data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-
-            return Command::SUCCESS;
+        } else {
+            $this->renderTable($output, $results);
         }
 
-        $this->renderTable($output, $results);
+        if ($failOnCrit) {
+            foreach ($results as $result) {
+                if (in_array($result->status(), ['crit', 'failing'], true)) {
+                    return Command::FAILURE;
+                }
+            }
+        }
 
         return Command::SUCCESS;
     }
@@ -176,6 +186,7 @@ class NetwatchCommand extends Command
         $table = new Table($output);
         $table->setHeaders([
             'Probe',
+            'Status',
             'Iterations',
             'Failures',
             'Metric',
@@ -202,6 +213,7 @@ class NetwatchCommand extends Command
 
                 $table->addRow([
                     $first ? $name : '',
+                    $first ? $this->statusCell($result) : '',
                     $first ? $result->iterations : '',
                     $first ? $result->failures : '',
                     $label,
@@ -209,7 +221,7 @@ class NetwatchCommand extends Command
                     $stats['max'],
                     $stats['avg'],
                     $stats['p50'],
-                    $stats['p95'],
+                    $metric === 'total_ms' ? $this->p95Cell($result, $stats['p95']) : $stats['p95'],
                     $stats['p99'],
                 ]);
                 $first = false;
@@ -221,5 +233,34 @@ class NetwatchCommand extends Command
         }
 
         $table->render();
+    }
+
+    private function statusCell(AggregateResult $result): string
+    {
+        return match ($result->status()) {
+            'ok' => '<fg=green>ok</>',
+            'warn' => '<fg=yellow>warn</>',
+            'crit' => '<fg=red>crit</>',
+            'failing' => '<fg=red>failing</>',
+        };
+    }
+
+    /**
+     * Color the total p95 against the probe's latency budget.
+     */
+    private function p95Cell(AggregateResult $result, float|int $p95): string
+    {
+        $warn = $result->thresholds['warn'] ?? null;
+        $crit = $result->thresholds['crit'] ?? null;
+
+        if ($crit !== null && $p95 >= $crit) {
+            return "<fg=red>{$p95}</>";
+        }
+
+        if ($warn !== null && $p95 >= $warn) {
+            return "<fg=yellow>{$p95}</>";
+        }
+
+        return (string) $p95;
     }
 }
