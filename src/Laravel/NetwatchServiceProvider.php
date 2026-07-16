@@ -66,6 +66,7 @@ class NetwatchServiceProvider extends ServiceProvider
     {
         $this->loadViewsFrom(__DIR__.'/resources/views', 'netwatch');
 
+        $this->registerDefaultAuthorization();
         $this->registerRoutes();
         $this->registerPublishing();
 
@@ -75,6 +76,20 @@ class NetwatchServiceProvider extends ServiceProvider
                 NetwatchCommand::class,
             ]);
         }
+    }
+
+    /**
+     * Restrict health-route access to the local environment unless the
+     * application has registered its own gate via Netwatch::auth(). The
+     * Authorize middleware denies the request when no callback returns true.
+     */
+    private function registerDefaultAuthorization(): void
+    {
+        if (Netwatch::authUsing() !== null) {
+            return;
+        }
+
+        Netwatch::auth(fn () => $this->app->environment('local'));
     }
 
     private function registerRoutes(): void

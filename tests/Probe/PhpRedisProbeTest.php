@@ -14,6 +14,28 @@ test('name with default port', function () {
     expect($probe->name())->toBe('redis://redis.local:6379');
 });
 
+test('empty-string username and password are treated as absent', function () {
+    $probe = new PhpRedisProbe('tcp://redis.local:6379', username: '', password: '');
+
+    $read = fn (string $prop) => (function () use ($prop) {
+        return $this->{$prop};
+    })->call($probe);
+
+    expect($read('username'))->toBeNull()
+        ->and($read('password'))->toBeNull();
+});
+
+test('non-empty username and password are preserved', function () {
+    $probe = new PhpRedisProbe('tcp://redis.local:6379', username: 'alice', password: 'secret');
+
+    $read = fn (string $prop) => (function () use ($prop) {
+        return $this->{$prop};
+    })->call($probe);
+
+    expect($read('username'))->toBe('alice')
+        ->and($read('password'))->toBe('secret');
+});
+
 test('probe fails on unreachable host', function () {
     $probe = new PhpRedisProbe('tcp://192.0.2.1:9999', timeout: 0.5);
     $result = $probe->probe();
