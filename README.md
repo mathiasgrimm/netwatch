@@ -108,6 +108,16 @@ return [
             ],
         ],
 
+        'database-tcp' => [
+            'enabled' => env('NETWATCH_PROBE_DATABASE_TCP_ENABLED', false),
+            'probe' => [
+                TcpPingProbe::class => [
+                    parse_url((string) env('DB_HOST'), PHP_URL_HOST) ?? env('DB_HOST'),
+                    (int) env('DB_PORT', 3306),
+                ],
+            ],
+        ],
+
         'redis' => [
             'enabled' => env('NETWATCH_PROBE_REDIS_ENABLED', false),
             'probe' => [
@@ -115,6 +125,16 @@ return [
                     env('REDIS_HOST').':'.env('REDIS_PORT'),
                     env('REDIS_USERNAME'),
                     env('REDIS_PASSWORD'),
+                ],
+            ],
+        ],
+
+        'redis-tcp' => [
+            'enabled' => env('NETWATCH_PROBE_REDIS_TCP_ENABLED', false),
+            'probe' => [
+                TcpPingProbe::class => [
+                    parse_url((string) env('REDIS_HOST'), PHP_URL_HOST) ?? env('REDIS_HOST'),
+                    (int) env('REDIS_PORT', 6379),
                 ],
             ],
         ],
@@ -185,7 +205,7 @@ php artisan netwatch:run --json --without-results
 
 ### Health Dashboard
 
-Enable the health dashboard route by setting `NETWATCH_HEALTH_ENABLED=true` in your `.env`:
+Enable the health dashboard route by setting `NETWATCH_HEALTH_ENABLED=true` in your `.env`. Once enabled, access is restricted to the `local` environment until you register your own gate or token (see [Authorization](#authorization)), so it is safe to leave on in production:
 
 ```env
 NETWATCH_HEALTH_ENABLED=true
@@ -252,7 +272,7 @@ Then access the endpoint as `/netwatch/health?token=your-secret-token`. When a v
 
 #### Gate-based auth
 
-By default, the health route is accessible only in `local` environments. To configure access in other environments, publish the service provider:
+By default, the health route is accessible only in the `local` environment: Netwatch registers a default gate that returns true only when `app()->environment('local')`, and the `Authorize` middleware denies the request (403) whenever no gate returns true and no valid token is supplied. To grant access in other environments, register your own gate, which replaces the default. Publish the service provider:
 
 ```bash
 php artisan vendor:publish --tag=netwatch-provider
@@ -289,21 +309,27 @@ NETWATCH_PATH=netwatch                        # URL path prefix for health route
 NETWATCH_HEALTH_TOKEN=null                    # Token for monitoring-tool access (null = disabled)
 
 NETWATCH_PROBE_DATABASE_ENABLED=false         # Enable database (PDO) probe
+NETWATCH_PROBE_DATABASE_TCP_ENABLED=false     # Enable raw TCP connect probe to DB_HOST:DB_PORT
 NETWATCH_PROBE_REDIS_ENABLED=false            # Enable Redis probe
+NETWATCH_PROBE_REDIS_TCP_ENABLED=false        # Enable raw TCP connect probe to REDIS_HOST:REDIS_PORT
 NETWATCH_PROBE_S3_ENABLED=false               # Enable S3 probe
 NETWATCH_PROBE_APP_ENABLED=false              # Enable HTTP probe for APP_URL
 NETWATCH_PROBE_CLOUDFLARE_DNS_ENABLED=false   # Enable Cloudflare DNS (1.1.1.1) TCP probe
 NETWATCH_PROBE_GOOGLE_DNS_ENABLED=false       # Enable Google DNS (8.8.8.8) TCP probe
 
-NETWATCH_PROBE_DATABASE_WARN_MS=10            # Latency thresholds (total p95, ms) per probe.
-NETWATCH_PROBE_DATABASE_CRIT_MS=25            # warn = amber, crit = red on the dashboard.
-NETWATCH_PROBE_REDIS_WARN_MS=5                # Set any of them to null/empty to disable
-NETWATCH_PROBE_REDIS_CRIT_MS=25               # that threshold.
+NETWATCH_PROBE_DATABASE_WARN_MS=50            # Latency thresholds (total p95, ms) per probe.
+NETWATCH_PROBE_DATABASE_CRIT_MS=100           # warn = amber, crit = red on the dashboard.
+NETWATCH_PROBE_DATABASE_TCP_WARN_MS=10        # Set any of them to null/empty to disable
+NETWATCH_PROBE_DATABASE_TCP_CRIT_MS=25        # that threshold.
+NETWATCH_PROBE_REDIS_WARN_MS=50
+NETWATCH_PROBE_REDIS_CRIT_MS=100
+NETWATCH_PROBE_REDIS_TCP_WARN_MS=5
+NETWATCH_PROBE_REDIS_TCP_CRIT_MS=25
 NETWATCH_PROBE_S3_WARN_MS=150
 NETWATCH_PROBE_S3_CRIT_MS=500
-NETWATCH_PROBE_APP_WARN_MS=300
+NETWATCH_PROBE_APP_WARN_MS=500
 NETWATCH_PROBE_APP_CRIT_MS=1000
-NETWATCH_PROBE_CLOUDFLARE_DNS_WARN_MS=25
+NETWATCH_PROBE_CLOUDFLARE_DNS_WARN_MS=35
 NETWATCH_PROBE_CLOUDFLARE_DNS_CRIT_MS=50
 NETWATCH_PROBE_GOOGLE_DNS_WARN_MS=25
 NETWATCH_PROBE_GOOGLE_DNS_CRIT_MS=50

@@ -17,12 +17,20 @@ class PhpRedisProbe implements ProbeInterface
 
     private readonly string $scheme;
 
+    private readonly ?string $username;
+
+    private readonly ?string $password;
+
     public function __construct(
         string $address,
-        private readonly ?string $username = null,
-        private readonly ?string $password = null,
+        ?string $username = null,
+        ?string $password = null,
         private readonly float $timeout = 3.0,
     ) {
+        // Treat empty-string credentials (e.g. REDIS_USERNAME="") as absent.
+        $this->username = ($username === '' || $username === null) ? null : $username;
+        $this->password = ($password === '' || $password === null) ? null : $password;
+
         $parsed = parse_url($address);
 
         $this->scheme = $parsed['scheme'] ?? 'tcp';

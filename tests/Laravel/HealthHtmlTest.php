@@ -170,8 +170,8 @@ test('HTML thresholds fall back to package defaults when the key is absent', fun
     $content = $this->get('/netwatch/health?format=html')->getContent();
 
     expect($content)
-        ->toContain('"warn":10')
-        ->toContain('"crit":25');
+        ->toContain('"warn":50')
+        ->toContain('"crit":100');
 });
 
 test('HTML thresholds are disabled when explicitly set to null', function () {

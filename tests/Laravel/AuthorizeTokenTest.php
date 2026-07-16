@@ -62,6 +62,49 @@ test('token not configured uses regular auth only', function () {
         ->assertForbidden();
 });
 
+test('no auth callback and no token denies access', function () {
+    config(['netwatch.health_route.token' => null]);
+
+    // Clear any registered auth callback so the gate has nothing that passes.
+    $property = new ReflectionProperty(Netwatch::class, 'authUsing');
+    $property->setValue(null, null);
+
+    $this->get('/netwatch/health', ['Accept' => 'application/json'])
+        ->assertForbidden();
+});
+
+test('auth callback returning true allows access', function () {
+    config(['netwatch.health_route.token' => null]);
+
+    Netwatch::auth(fn () => true);
+
+    $this->get('/netwatch/health', ['Accept' => 'application/json'])
+        ->assertOk();
+});
+
+test('default gate allows the local environment', function () {
+    config(['netwatch.health_route.token' => null]);
+
+    // No app-registered gate: let the provider install its default.
+    (new ReflectionProperty(Netwatch::class, 'authUsing'))->setValue(null, null);
+    $this->app['env'] = 'local';
+    $this->app->register(NetwatchServiceProvider::class, true);
+
+    $this->get('/netwatch/health', ['Accept' => 'application/json'])
+        ->assertOk();
+});
+
+test('default gate denies non-local environments', function () {
+    config(['netwatch.health_route.token' => null]);
+
+    (new ReflectionProperty(Netwatch::class, 'authUsing'))->setValue(null, null);
+    $this->app['env'] = 'production';
+    $this->app->register(NetwatchServiceProvider::class, true);
+
+    $this->get('/netwatch/health', ['Accept' => 'application/json'])
+        ->assertForbidden();
+});
+
 test('token not configured ignores query param and uses regular auth', function () {
     config(['netwatch.health_route.token' => null]);
 
