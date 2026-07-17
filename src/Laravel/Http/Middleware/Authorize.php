@@ -13,8 +13,9 @@ class Authorize
     public function handle(Request $request, Closure $next)
     {
         $token = config('netwatch.health_route.token');
+        $requestToken = $request->query('token');
 
-        if ($token && $request->query('token') && hash_equals($token, $request->query('token'))) {
+        if ($token && is_string($requestToken) && $requestToken !== '' && hash_equals($token, $requestToken)) {
             return $next($request);
         }
 

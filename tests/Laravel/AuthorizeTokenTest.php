@@ -105,6 +105,13 @@ test('default gate denies non-local environments', function () {
         ->assertForbidden();
 });
 
+test('array token query param is rejected instead of erroring', function () {
+    config(['netwatch.health_route.token' => 'secret-token']);
+
+    $this->get('/netwatch/health?token[]=secret-token', ['Accept' => 'application/json'])
+        ->assertForbidden();
+});
+
 test('token not configured ignores query param and uses regular auth', function () {
     config(['netwatch.health_route.token' => null]);
 

@@ -10,13 +10,23 @@ use Mathiasgrimm\Netwatch\Result\ProbeResult;
 class TcpPingProbe implements ProbeInterface
 {
     public function __construct(
-        private readonly string $host,
+        private readonly ?string $host,
         private readonly int $port,
         private readonly float $timeout = 3.0,
     ) {}
 
     public function probe(): ProbeResult
     {
+        if ($this->host === null || $this->host === '') {
+            return new ProbeResult(
+                connectMs: 0,
+                requestMs: 0,
+                totalMs: 0,
+                success: false,
+                error: 'TCP connect failed: no host configured',
+            );
+        }
+
         $start = hrtime(true);
 
         $errno = 0;

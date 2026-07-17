@@ -76,8 +76,12 @@ return [
             ],
             'probe' => [
                 TcpPingProbe::class => [
-                    parse_url((string) env('DB_HOST'), PHP_URL_HOST) ?? env('DB_HOST'),
-                    (int) env('DB_PORT', 3306),
+                    parse_url((string) env('DB_HOST'), PHP_URL_HOST) ?: env('DB_HOST'),
+                    (int) (env('DB_PORT') ?: match (env('DB_CONNECTION')) {
+                        'pgsql' => 5432,
+                        'sqlsrv' => 1433,
+                        default => 3306,
+                    }),
                 ],
             ],
         ],
@@ -105,8 +109,8 @@ return [
             ],
             'probe' => [
                 TcpPingProbe::class => [
-                    parse_url((string) env('REDIS_HOST'), PHP_URL_HOST) ?? env('REDIS_HOST'),
-                    (int) env('REDIS_PORT', 6379),
+                    parse_url((string) env('REDIS_HOST'), PHP_URL_HOST) ?: env('REDIS_HOST'),
+                    (int) (env('REDIS_PORT') ?: 6379),
                 ],
             ],
         ],
