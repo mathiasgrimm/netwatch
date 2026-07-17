@@ -77,7 +77,11 @@ return [
             'probe' => [
                 TcpPingProbe::class => [
                     parse_url((string) env('DB_HOST'), PHP_URL_HOST) ?: env('DB_HOST'),
-                    (int) (env('DB_PORT') ?: 3306),
+                    (int) (env('DB_PORT') ?: match (env('DB_CONNECTION')) {
+                        'pgsql' => 5432,
+                        'sqlsrv' => 1433,
+                        default => 3306,
+                    }),
                 ],
             ],
         ],
