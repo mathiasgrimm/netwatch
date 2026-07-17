@@ -9,6 +9,22 @@ test('name returns tcp uri', function () {
     expect($probe->name())->toBe('tcp://example.com:443');
 });
 
+test('probe fails gracefully when host is null', function () {
+    $probe = new TcpPingProbe(null, 3306);
+    $result = $probe->probe();
+
+    expect($result->success)->toBeFalse()
+        ->and($result->error)->toBe('TCP connect failed: no host configured');
+});
+
+test('probe fails gracefully when host is empty', function () {
+    $probe = new TcpPingProbe('', 6379);
+    $result = $probe->probe();
+
+    expect($result->success)->toBeFalse()
+        ->and($result->error)->toBe('TCP connect failed: no host configured');
+});
+
 test('probe fails on unreachable host', function () {
     $probe = new TcpPingProbe('192.0.2.1', 9999, timeout: 0.5);
     $result = $probe->probe();

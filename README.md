@@ -112,8 +112,8 @@ return [
             'enabled' => env('NETWATCH_PROBE_DATABASE_TCP_ENABLED', false),
             'probe' => [
                 TcpPingProbe::class => [
-                    parse_url((string) env('DB_HOST'), PHP_URL_HOST) ?? env('DB_HOST'),
-                    (int) env('DB_PORT', 3306),
+                    parse_url((string) env('DB_HOST'), PHP_URL_HOST) ?: env('DB_HOST'),
+                    (int) (env('DB_PORT') ?: 3306),
                 ],
             ],
         ],
@@ -133,8 +133,8 @@ return [
             'enabled' => env('NETWATCH_PROBE_REDIS_TCP_ENABLED', false),
             'probe' => [
                 TcpPingProbe::class => [
-                    parse_url((string) env('REDIS_HOST'), PHP_URL_HOST) ?? env('REDIS_HOST'),
-                    (int) env('REDIS_PORT', 6379),
+                    parse_url((string) env('REDIS_HOST'), PHP_URL_HOST) ?: env('REDIS_HOST'),
+                    (int) (env('REDIS_PORT') ?: 6379),
                 ],
             ],
         ],
@@ -331,7 +331,7 @@ NETWATCH_PROBE_APP_WARN_MS=500
 NETWATCH_PROBE_APP_CRIT_MS=1000
 NETWATCH_PROBE_CLOUDFLARE_DNS_WARN_MS=35
 NETWATCH_PROBE_CLOUDFLARE_DNS_CRIT_MS=50
-NETWATCH_PROBE_GOOGLE_DNS_WARN_MS=25
+NETWATCH_PROBE_GOOGLE_DNS_WARN_MS=35
 NETWATCH_PROBE_GOOGLE_DNS_CRIT_MS=50
 ```
 
