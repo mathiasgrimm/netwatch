@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Console\NetwatchCommand;
+use MathiasGrimm\Netwatch\Console\NetwatchCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -24,7 +24,7 @@ return [
     'probes' => [
         'test-probe' => [
             'enabled' => true,
-            'probe' => new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
+            'probe' => new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
         ],
     ],
 ];
@@ -42,11 +42,11 @@ return [
     'probes' => [
         'probe-a' => [
             'enabled' => true,
-            'probe' => new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
+            'probe' => new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
         ],
         'probe-b' => [
             'enabled' => true,
-            'probe' => new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
+            'probe' => new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe(),
         ],
     ],
 ];
@@ -186,7 +186,7 @@ return [
         'test-probe' => [
             'enabled' => true,
             'thresholds' => ['warn' => {$warnValue}, 'crit' => {$critValue}],
-            'probe' => new \\Mathiasgrimm\\Netwatch\\Tests\\Fixtures\\{$probe}(),
+            'probe' => new \\MathiasGrimm\\Netwatch\\Tests\\Fixtures\\{$probe}(),
         ],
     ],
 ];

@@ -77,12 +77,12 @@ The config file (`config/netwatch.php`) contains pre-configured probes that read
 ```php
 <?php
 
-use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
-use Mathiasgrimm\Netwatch\Probe\HttpProbe;
-use Mathiasgrimm\Netwatch\Probe\PdoProbe;
-use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
-use Mathiasgrimm\Netwatch\Probe\S3Probe;
-use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
+use MathiasGrimm\Netwatch\Laravel\Http\Middleware\Authorize;
+use MathiasGrimm\Netwatch\Probe\HttpProbe;
+use MathiasGrimm\Netwatch\Probe\PdoProbe;
+use MathiasGrimm\Netwatch\Probe\PhpRedisProbe;
+use MathiasGrimm\Netwatch\Probe\S3Probe;
+use MathiasGrimm\Netwatch\Probe\TcpPingProbe;
 
 return [
     'iterations' => (int) env('NETWATCH_ITERATIONS', 10),
@@ -367,9 +367,9 @@ The table shows a per-probe `Status` column and colors the total p95 against the
 ### Programmatic
 
 ```php
-use Mathiasgrimm\Netwatch\Netwatch;
-use Mathiasgrimm\Netwatch\Probe\HttpProbe;
-use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
+use MathiasGrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Probe\HttpProbe;
+use MathiasGrimm\Netwatch\Probe\TcpPingProbe;
 
 $netwatch = new Netwatch([
     'example' => ['probe' => new HttpProbe('https://example.com')],
@@ -392,10 +392,10 @@ Create a `netwatch.php` in your project root (or use `netwatch:init` to generate
 ```php
 <?php
 
-use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
-use Mathiasgrimm\Netwatch\Probe\PdoProbe;
-use Mathiasgrimm\Netwatch\Probe\HttpProbe;
-use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
+use MathiasGrimm\Netwatch\Probe\PhpRedisProbe;
+use MathiasGrimm\Netwatch\Probe\PdoProbe;
+use MathiasGrimm\Netwatch\Probe\HttpProbe;
+use MathiasGrimm\Netwatch\Probe\TcpPingProbe;
 
 return [
     'iterations' => 10,
@@ -535,8 +535,8 @@ new S3Probe(
 Implement `ProbeInterface` to create your own:
 
 ```php
-use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
-use Mathiasgrimm\Netwatch\Result\ProbeResult;
+use MathiasGrimm\Netwatch\Contract\ProbeInterface;
+use MathiasGrimm\Netwatch\Result\ProbeResult;
 
 class MyProbe implements ProbeInterface
 {

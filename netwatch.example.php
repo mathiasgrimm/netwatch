@@ -1,9 +1,9 @@
 <?php
 
-use Mathiasgrimm\Netwatch\Probe\HttpProbe;
-use Mathiasgrimm\Netwatch\Probe\PdoProbe;
-use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
-use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
+use MathiasGrimm\Netwatch\Probe\HttpProbe;
+use MathiasGrimm\Netwatch\Probe\PdoProbe;
+use MathiasGrimm\Netwatch\Probe\PhpRedisProbe;
+use MathiasGrimm\Netwatch\Probe\TcpPingProbe;
 
 return [
     'iterations' => 10,

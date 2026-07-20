@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Laravel\Http\Middleware;
+namespace MathiasGrimm\Netwatch\Laravel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Mathiasgrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Netwatch;
 
 class Authorize
 {

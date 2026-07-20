@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Console\InitCommand;
+use MathiasGrimm\Netwatch\Console\InitCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 

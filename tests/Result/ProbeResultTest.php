@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Result\ProbeResult;
+use MathiasGrimm\Netwatch\Result\ProbeResult;
 
 test('constructor sets properties', function () {
     $result = new ProbeResult(

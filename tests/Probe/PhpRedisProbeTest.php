@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
+use MathiasGrimm\Netwatch\Probe\PhpRedisProbe;
 
 test('name with tcp scheme and port', function () {
     $probe = new PhpRedisProbe('tcp://redis.local:6380');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Probe\S3Probe;
+use MathiasGrimm\Netwatch\Probe\S3Probe;
 
 test('name returns s3 uri', function () {
     $probe = new S3Probe(bucket: 'my-bucket', region: 'us-east-1', key: 'k', secret: 's');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
+use MathiasGrimm\Netwatch\Probe\TcpPingProbe;
 
 test('name returns tcp uri', function () {
     $probe = new TcpPingProbe('example.com', 443);

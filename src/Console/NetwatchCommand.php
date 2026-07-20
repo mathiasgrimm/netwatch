@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Console;
+namespace MathiasGrimm\Netwatch\Console;
 
-use Mathiasgrimm\Netwatch\Netwatch;
-use Mathiasgrimm\Netwatch\Result\AggregateResult;
+use MathiasGrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Result\AggregateResult;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;

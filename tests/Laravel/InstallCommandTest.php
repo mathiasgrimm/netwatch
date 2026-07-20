@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
-use Mathiasgrimm\Netwatch\Laravel\NetwatchServiceProvider;
+use MathiasGrimm\Netwatch\Laravel\NetwatchServiceProvider;
 use Orchestra\Testbench\TestCase;
 
 uses(TestCase::class);

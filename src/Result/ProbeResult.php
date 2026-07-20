@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Result;
+namespace MathiasGrimm\Netwatch\Result;
 
 class ProbeResult
 {

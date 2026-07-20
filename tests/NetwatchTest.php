@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Netwatch;
-use Mathiasgrimm\Netwatch\Result\AggregateResult;
-use Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe;
+use MathiasGrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Result\AggregateResult;
+use MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe;
 
 function writeTestConfig(string $dir, array $config): string
 {
@@ -50,7 +50,7 @@ test('fromConfig loads file', function () {
     $path = writeTestConfig($this->configDir, [
         'iterations' => 3,
         'probes' => [
-            'test' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'test' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
         ],
     ]);
 
@@ -73,8 +73,8 @@ test('run all probes', function () {
     $path = writeTestConfig($this->configDir, [
         'iterations' => 2,
         'probes' => [
-            'probe-a' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
-            'probe-b' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'probe-a' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'probe-b' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
         ],
     ]);
 
@@ -91,8 +91,8 @@ test('run single probe', function () {
     $path = writeTestConfig($this->configDir, [
         'iterations' => 2,
         'probes' => [
-            'probe-a' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
-            'probe-b' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'probe-a' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'probe-b' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
         ],
     ]);
 
@@ -105,7 +105,7 @@ test('run unknown probe throws', function () {
     $path = writeTestConfig($this->configDir, [
         'iterations' => 1,
         'probes' => [
-            'probe-a' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'probe-a' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
         ],
     ]);
 
@@ -116,7 +116,7 @@ test('iteration override from run()', function () {
     $path = writeTestConfig($this->configDir, [
         'iterations' => 2,
         'probes' => [
-            'test' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'test' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
         ],
     ]);
 
@@ -130,7 +130,7 @@ test('per-probe iteration override', function () {
         'iterations' => 2,
         'probes' => [
             'test' => [
-                'probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()',
+                'probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()',
                 'iterations' => 7,
             ],
         ],
@@ -144,7 +144,7 @@ test('per-probe iteration override', function () {
 test('default iterations is 10', function () {
     $path = writeTestConfig($this->configDir, [
         'probes' => [
-            'test' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'test' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
         ],
     ]);
 
@@ -276,9 +276,9 @@ test('probeNames returns all names', function () {
     $path = writeTestConfig($this->configDir, [
         'iterations' => 1,
         'probes' => [
-            'alpha' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
-            'beta' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
-            'gamma' => ['probe' => 'new \Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'alpha' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'beta' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
+            'gamma' => ['probe' => 'new \MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe()'],
         ],
     ]);
 

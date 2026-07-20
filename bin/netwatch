@@ -23,8 +23,8 @@ if (!$autoloaded) {
     exit(1);
 }
 
-use Mathiasgrimm\Netwatch\Console\InitCommand;
-use Mathiasgrimm\Netwatch\Console\NetwatchCommand;
+use MathiasGrimm\Netwatch\Console\InitCommand;
+use MathiasGrimm\Netwatch\Console\NetwatchCommand;
 use Symfony\Component\Console\Application;
 
 $app = new Application('netwatch', '1.0.0');

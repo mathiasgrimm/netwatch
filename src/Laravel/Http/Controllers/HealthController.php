@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Laravel\Http\Controllers;
+namespace MathiasGrimm\Netwatch\Laravel\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Mathiasgrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Netwatch;
 
 class HealthController
 {

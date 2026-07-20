@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Laravel\NetwatchServiceProvider;
-use Mathiasgrimm\Netwatch\Netwatch;
-use Mathiasgrimm\Netwatch\Tests\Fixtures\CountingProbe;
-use Mathiasgrimm\Netwatch\Tests\Fixtures\FailingProbe;
-use Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe;
+use MathiasGrimm\Netwatch\Laravel\NetwatchServiceProvider;
+use MathiasGrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Tests\Fixtures\CountingProbe;
+use MathiasGrimm\Netwatch\Tests\Fixtures\FailingProbe;
+use MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe;
 use Orchestra\Testbench\TestCase;
 
 uses(TestCase::class);

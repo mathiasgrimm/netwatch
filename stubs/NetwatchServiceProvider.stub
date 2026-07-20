@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
-use Mathiasgrimm\Netwatch\Laravel\NetwatchApplicationServiceProvider;
+use MathiasGrimm\Netwatch\Laravel\NetwatchApplicationServiceProvider;
 
 class NetwatchServiceProvider extends NetwatchApplicationServiceProvider
 {

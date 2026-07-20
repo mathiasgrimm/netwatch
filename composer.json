@@ -5,12 +5,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Mathiasgrimm\\Netwatch\\": "src/"
+            "MathiasGrimm\\Netwatch\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Mathiasgrimm\\Netwatch\\Tests\\": "tests/"
+            "MathiasGrimm\\Netwatch\\Tests\\": "tests/"
         }
     },
     "authors": [
@@ -34,7 +34,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Mathiasgrimm\\Netwatch\\Laravel\\NetwatchServiceProvider"
+                "MathiasGrimm\\Netwatch\\Laravel\\NetwatchServiceProvider"
             ]
         }
     },

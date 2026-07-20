@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
-use Mathiasgrimm\Netwatch\Result\ProbeResult;
-use Mathiasgrimm\Netwatch\Runner;
+use MathiasGrimm\Netwatch\Contract\ProbeInterface;
+use MathiasGrimm\Netwatch\Result\ProbeResult;
+use MathiasGrimm\Netwatch\Runner;
 
 function createFakeProbe(array $results): ProbeInterface
 {

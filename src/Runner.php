@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch;
+namespace MathiasGrimm\Netwatch;
 
-use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
-use Mathiasgrimm\Netwatch\Result\AggregateResult;
-use Mathiasgrimm\Netwatch\Result\ProbeResult;
+use MathiasGrimm\Netwatch\Contract\ProbeInterface;
+use MathiasGrimm\Netwatch\Result\AggregateResult;
+use MathiasGrimm\Netwatch\Result\ProbeResult;
 
 class Runner
 {

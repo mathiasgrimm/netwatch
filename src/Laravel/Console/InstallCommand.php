@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Laravel\Console;
+namespace MathiasGrimm\Netwatch\Laravel\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\ServiceProvider;

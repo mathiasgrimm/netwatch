@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Contract;
+namespace MathiasGrimm\Netwatch\Contract;
 
-use Mathiasgrimm\Netwatch\Result\ProbeResult;
+use MathiasGrimm\Netwatch\Result\ProbeResult;
 
 interface ProbeInterface
 {
