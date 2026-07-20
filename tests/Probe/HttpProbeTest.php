@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
-use Mathiasgrimm\Netwatch\Probe\HttpProbe;
+use MathiasGrimm\Netwatch\Probe\HttpProbe;
 
 function createHttpFactory(string $url, int $status): Factory
 {

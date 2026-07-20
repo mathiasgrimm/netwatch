@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Laravel;
+namespace MathiasGrimm\Netwatch\Laravel;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Mathiasgrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Netwatch;
 
 class NetwatchApplicationServiceProvider extends ServiceProvider
 {

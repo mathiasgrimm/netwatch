@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Netwatch;
-use Mathiasgrimm\Netwatch\Tests\Fixtures\SuccessProbe;
+use MathiasGrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Tests\Fixtures\SuccessProbe;
 
 test('run with array of probe names returns only those probes', function () {
     $netwatch = new Netwatch(

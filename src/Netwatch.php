@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch;
+namespace MathiasGrimm\Netwatch;
 
 use Closure;
 use InvalidArgumentException;
-use Mathiasgrimm\Netwatch\Contract\ProbeInterface;
-use Mathiasgrimm\Netwatch\Result\AggregateResult;
+use MathiasGrimm\Netwatch\Contract\ProbeInterface;
+use MathiasGrimm\Netwatch\Result\AggregateResult;
 use RuntimeException;
 use Throwable;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Console;
+namespace MathiasGrimm\Netwatch\Console;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -44,10 +44,10 @@ class InitCommand extends Command
         return <<<'PHP'
 <?php
 
-use Mathiasgrimm\Netwatch\Probe\PhpRedisProbe;
-use Mathiasgrimm\Netwatch\Probe\PdoProbe;
-use Mathiasgrimm\Netwatch\Probe\HttpProbe;
-use Mathiasgrimm\Netwatch\Probe\TcpPingProbe;
+use MathiasGrimm\Netwatch\Probe\PhpRedisProbe;
+use MathiasGrimm\Netwatch\Probe\PdoProbe;
+use MathiasGrimm\Netwatch\Probe\HttpProbe;
+use MathiasGrimm\Netwatch\Probe\TcpPingProbe;
 
 return [
     'iterations' => 10,

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Mathiasgrimm\Netwatch\Laravel;
+namespace MathiasGrimm\Netwatch\Laravel;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Mathiasgrimm\Netwatch\Laravel\Console\InstallCommand;
-use Mathiasgrimm\Netwatch\Laravel\Console\NetwatchCommand;
-use Mathiasgrimm\Netwatch\Laravel\Http\Middleware\Authorize;
-use Mathiasgrimm\Netwatch\Netwatch;
+use MathiasGrimm\Netwatch\Laravel\Console\InstallCommand;
+use MathiasGrimm\Netwatch\Laravel\Console\NetwatchCommand;
+use MathiasGrimm\Netwatch\Laravel\Http\Middleware\Authorize;
+use MathiasGrimm\Netwatch\Netwatch;
 use RuntimeException;
 use Throwable;
 

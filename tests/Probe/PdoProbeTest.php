@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Mathiasgrimm\Netwatch\Probe\PdoProbe;
+use MathiasGrimm\Netwatch\Probe\PdoProbe;
 
 test('name for mysql', function () {
     $probe = new PdoProbe('mysql:host=127.0.0.1;dbname=app', 'root', '');
